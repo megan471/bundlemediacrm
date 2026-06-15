@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bundle Media CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="login-container">
+    <div class="login-logo">
+      <div class="logo-mark">B</div>
+      <div class="logo-text">BUNDLE<br><span>MEDIA.</span></div>
+    </div>
+    <p class="login-tagline">Your agency. Your clients. All in one place.</p>
+    <div class="login-card">
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="switchLoginTab('agency')">Agency Login</button>
+        <button class="login-tab" onclick="switchLoginTab('client')">Client Login</button>
+      </div>
+      <div id="agency-login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="agency-email" placeholder="team@bundlemedia.co.za" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="agency-password" placeholder="••••••••" />
+        </div>
+        <button class="btn-login" onclick="agencyLogin()">Let's Go ✦</button>
+        <p class="login-error" id="agency-error"></p>
+      </div>
+      <div id="client-login-form" style="display:none">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="client-email" placeholder="you@yourbrand.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="client-password" placeholder="••••••••" />
+        </div>
+        <button class="btn-login btn-login-client" onclick="clientLogin()">View My Portal ✦</button>
+        <p class="login-error" id="client-error"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AGENCY DASHBOARD -->
+<div id="agency-dashboard" class="dashboard" style="display:none">
+  
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark-sm">B</div>
+      <span>BUNDLE MEDIA.</span>
+    </div>
+    <div class="user-profile">
+      <div class="user-avatar" id="sidebar-avatar"></div>
+      <div class="user-info">
+        <span class="user-name" id="sidebar-name"></span>
+        <span class="user-role" id="sidebar-role"></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" onclick="showTab('dashboard')">
+        <span class="nav-icon">⚡</span> Dashboard
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('clients')">
+        <span class="nav-icon">👥</span> Clients
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('calendar')">
+        <span class="nav-icon">📅</span> Calendar
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('briefing')">
+        <span class="nav-icon">📋</span> Briefing
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('content')">
+        <span class="nav-icon">🎨</span> Content
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('todos')">
+        <span class="nav-icon">✅</span> To-Do Lists
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('reports')">
+        <span class="nav-icon">📊</span> Reports
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('settings')">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
+    </nav>
+    <button class="btn-logout" onclick="logout()">← Logout</button>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title" id="dashboard-greeting"></h1>
+          <p class="page-subtitle">Here's what's happening today</p>
+        </div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card stat-pink">
+          <div class="stat-number" id="stat-clients">18</div>
+          <div class="stat-label">Active Clients</div>
+          <div class="stat-icon">👥</div>
+        </div>
+        <div class="stat-card stat-blue">
+          <div class="stat-number" id="stat-posts">0</div>
+          <div class="stat-label">Posts Due This Week</div>
+          <div class="stat-icon">📸</div>
+        </div>
+        <div class="stat-card stat-yellow">
+          <div class="stat-number" id="stat-approvals">0</div>
+          <div class="stat-label">Pending Approvals</div>
+          <div class="stat-icon">⏳</div>
+        </div>
+        <div class="stat-card stat-black">
+          <div class="stat-number" id="stat-overdue">0</div>
+          <div class="stat-label">Overdue Tasks</div>
+          <div class="stat-icon">🔴</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <h3 class="dash-card-title">📅 Upcoming This Week</h3>
+          <div id="upcoming-events" class="upcoming-list"></div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-card-title">🔔 Pending Approvals</h3>
+          <div id="pending-approvals-list" class="upcoming-list">
+            <p class="empty-state">No pending approvals 🎉</p>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-card-title">✅ My Tasks</h3>
+          <div id="my-tasks-preview" class="upcoming-list"></div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-card-title">🎂 Upcoming Birthdays</h3>
+          <div id="upcoming-birthdays" class="upcoming-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENTS TAB -->
+    <div id="tab-clients" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Clients</h1>
+          <p class="page-subtitle">Manage all your client accounts</p>
+        </div>
+        <button class="btn-primary" onclick="openAddClient()">+ Add Client</button>
+      </div>
+      <div class="search-bar-wrap">
+        <input type="text" class="search-bar" placeholder="🔍 Search clients..." oninput="filterClients(this.value)" />
+        <div class="filter-pills">
+          <button class="pill active" onclick="filterByStatus('all', this)">All</button>
+          <button class="pill" onclick="filterByStatus('active', this)">Active</button>
+          <button class="pill" onclick="filterByStatus('paused', this)">Paused</button>
+        </div>
+      </div>
+      <div class="clients-grid" id="clients-grid"></div>
+    </div>
+
+    <!-- CALENDAR TAB -->
+    <div id="tab-calendar" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Calendar</h1>
+          <p class="page-subtitle">Birthdays, meetings, deadlines & holidays</p>
+        </div>
+        <button class="btn-primary" onclick="openAddEvent()">+ Add Event</button>
+      </div>
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#DD0B82"></span> Birthdays</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#3496D3"></span> Meetings</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#F7EC07;border:1px solid #ccc"></span> Public Holidays</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#000"></span> Deadlines</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#9B59B6"></span> Office Days</span>
+      </div>
+      <div class="calendar-wrap">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+          <h2 class="cal-month-title" id="cal-month-title"></h2>
+          <button class="cal-nav" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-day-header">Sun</div>
+          <div class="cal-day-header">Mon</div>
+          <div class="cal-day-header">Tue</div>
+          <div class="cal-day-header">Wed</div>
+          <div class="cal-day-header">Thu</div>
+          <div class="cal-day-header">Fri</div>
+          <div class="cal-day-header">Sat</div>
+        </div>
+        <div class="cal-body" id="cal-body"></div>
+      </div>
+      <div class="events-sidebar" id="events-sidebar">
+        <h3>Events</h3>
+        <div id="events-list"></div>
+      </div>
+    </div>
+
+    <!-- BRIEFING TAB -->
+    <div id="tab-briefing" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Monthly Briefing</h1>
+          <p class="page-subtitle">Content focus and objectives per client</p>
+        </div>
+        <div class="month-selector">
+          <select id="brief-month-select" onchange="loadBriefs()" class="select-styled">
+            <option value="2026-06">June 2026</option>
+            <option value="2026-07">July 2026</option>
+            <option value="2026-08">August 2026</option>
+          </select>
+        </div>
+      </div>
+      <div class="briefs-grid" id="briefs-grid"></div>
+    </div>
+
+    <!-- CONTENT TAB -->
+    <div id="tab-content" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Content</h1>
+          <p class="page-subtitle">Plan, schedule and track all posts</p>
+        </div>
+        <button class="btn-primary" onclick="openAddPost()">+ Add Post</button>
+      </div>
+      <div class="content-filters">
+        <select class="select-styled" id="content-client-filter" onchange="filterContent()">
+          <option value="all">All Clients</option>
+        </select>
+        <select class="select-styled" id="content-status-filter" onchange="filterContent()">
+          <option value="all">All Statuses</option>
+          <option value="draft">Draft</option>
+          <option value="review">In Review</option>
+          <option value="pending">Pending Approval</option>
+          <option value="approved">Approved</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="published">Published</option>
+        </select>
+        <select class="select-styled" id="content-platform-filter" onchange="filterContent()">
+          <option value="all">All Platforms</option>
+          <option value="instagram">Instagram</option>
+          <option value="facebook">Facebook</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="tiktok">TikTok</option>
+          <option value="youtube">YouTube</option>
+        </select>
+      </div>
+      <div class="content-board" id="content-board">
+        <div class="content-column">
+          <div class="column-header draft-header">📝 Draft</div>
+          <div class="column-body" id="col-draft"></div>
+        </div>
+        <div class="content-column">
+          <div class="column-header review-header">👀 In Review</div>
+          <div class="column-body" id="col-review"></div>
+        </div>
+        <div class="content-column">
+          <div class="column-header pending-header">⏳ Pending Approval</div>
+          <div class="column-body" id="col-pending"></div>
+        </div>
+        <div class="content-column">
+          <div class="column-header approved-header">✅ Approved</div>
+          <div class="column-body" id="col-approved"></div>
+        </div>
+        <div class="content-column">
+          <div class="column-header scheduled-header">🗓️ Scheduled</div>
+          <div class="column-body" id="col-scheduled"></div>
+        </div>
+        <div class="content-column">
+          <div class="column-header published-header">🚀 Published</div>
+          <div class="column-body" id="col-published"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TO-DO LISTS TAB -->
+    <div id="tab-todos" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">To-Do Lists</h1>
+          <p class="page-subtitle">Tasks for the team</p>
+        </div>
+        <button class="btn-primary" onclick="openAddTask()">+ Add Task</button>
+      </div>
+      <div class="todo-boards">
+        <div class="todo-board">
+          <div class="todo-board-header" style="background:#DD0B82">
+            <div class="todo-avatar-wrap">
+              <img src="team/megan.png" class="todo-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+              <div class="todo-avatar-initials" style="display:none">M</div>
+            </div>
+            <div>
+              <div class="todo-board-name">Megan</div>
+              <div class="todo-board-role">Director</div>
+            </div>
+          </div>
+          <div class="todo-add">
+            <input type="text" class="todo-input" placeholder="Add a task..." id="task-input-megan" onkeypress="if(event.key==='Enter') addTask('megan')" />
+            <button class="todo-add-btn" onclick="addTask('megan')">+</button>
+          </div>
+          <div class="todo-list" id="todos-megan"></div>
+        </div>
+        <div class="todo-board">
+          <div class="todo-board-header" style="background:#3496D3">
+            <div class="todo-avatar-wrap">
+              <img src="team/stacey.png" class="todo-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+              <div class="todo-avatar-initials" style="display:none">S</div>
+            </div>
+            <div>
+              <div class="todo-board-name">Stacey</div>
+              <div class="todo-board-role">Director</div>
+            </div>
+          </div>
+          <div class="todo-add">
+            <input type="text" class="todo-input" placeholder="Add a task..." id="task-input-stacey" onkeypress="if(event.key==='Enter') addTask('stacey')" />
+            <button class="todo-add-btn" onclick="addTask('stacey')">+</button>
+          </div>
+          <div class="todo-list" id="todos-stacey"></div>
+        </div>
+        <div class="todo-board">
+          <div class="todo-board-header" style="background:#000">
+            <div class="todo-avatar-wrap">
+              <img src="team/casey.png" class="todo-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+              <div class="todo-avatar-initials" style="display:none">C</div>
+            </div>
+            <div>
+              <div class="todo-board-name">Casey</div>
+              <div class="todo-board-role">Content Creator</div>
+            </div>
+          </div>
+          <div class="todo-add">
+            <input type="text" class="todo-input" placeholder="Add a task..." id="task-input-casey" onkeypress="if(event.key==='Enter') addTask('casey')" />
+            <button class="todo-add-btn" onclick="addTask('casey')">+</button>
+          </div>
+          <div class="todo-list" id="todos-casey"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS TAB -->
+    <div id="tab-reports" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Reports</h1>
+          <p class="page-subtitle">Monthly analytics per client</p>
+        </div>
+        <div class="report-controls">
+          <select class="select-styled" id="report-client-select" onchange="loadReport()">
+            <option value="">Select Client</option>
+          </select>
+          <select class="select-styled" id="report-month-select" onchange="loadReport()">
+            <option value="2026-06">June 2026</option>
+            <option value="2026-05">May 2026</option>
+            <option value="2026-04">April 2026</option>
+            <option value="2026-03">March 2026</option>
+          </select>
+        </div>
+      </div>
+      <div id="report-content">
+        <div class="empty-report">
+          <div class="empty-report-icon">📊</div>
+          <p>Select a client and month to view or create a report</p>
+          <button class="btn-primary" onclick="openNewReport()">+ Create Report</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="tab-settings" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Agency preferences and configuration</p>
+        </div>
+      </div>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>📅 Cal.com Integration</h3>
+          <p>Booking link for client meetings</p>
+          <div class="form-group">
+            <label>Cal.com URL</label>
+            <input type="text" id="calcom-url" value="https://cal.com/bundlemedia" class="input-styled" />
+          </div>
+          <button class="btn-primary" onclick="saveCalcom()">Save</button>
+        </div>
+        <div class="settings-card">
+          <h3>👥 Team Members</h3>
+          <div class="team-settings">
+            <div class="team-member-setting">
+              <img src="team/megan.png" class="team-setting-avatar" onerror="this.src=''" />
+              <div>
+                <strong>Megan</strong>
+                <span class="role-badge director">Director</span>
+              </div>
+            </div>
+            <div class="team-member-setting">
+              <img src="team/stacey.png" class="team-setting-avatar" onerror="this.src=''" />
+              <div>
+                <strong>Stacey</strong>
+                <span class="role-badge director">Director</span>
+              </div>
+            </div>
+            <div class="team-member-setting">
+              <img src="team/casey.png" class="team-setting-avatar" onerror="this.src=''" />
+              <div>
+                <strong>Casey</strong>
+                <span class="role-badge employee">Content Creator</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>🔔 Notifications</h3>
+          <div class="toggle-list">
+            <div class="toggle-item">
+              <span>Report reminders (30th/31st)</span>
+              <label class="toggle"><input type="checkbox" checked /><span class="slider"></span></label>
+            </div>
+            <div class="toggle-item">
+              <span>Birthday reminders</span>
+              <label class="toggle"><input type="checkbox" checked /><span class="slider"></span></label>
+            </div>
+            <div class="toggle-item">
+              <span>Client approval alerts</span>
+              <label class="toggle"><input type="checkbox" checked /><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CLIENT PORTAL -->
+<div id="client-portal" class="dashboard client-theme" style="display:none">
+  <aside class="sidebar client-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark-sm">B</div>
+      <span>BUNDLE MEDIA.</span>
+    </div>
+    <div class="client-brand" id="client-brand-sidebar"></div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" onclick="showClientTab('client-home')">
+        <span class="nav-icon">🏠</span> Home
+      </a>
+      <a href="#" class="nav-item" onclick="showClientTab('client-calendar')">
+        <span class="nav-icon">📅</span> Content Calendar
+      </a>
+      <a href="#" class="nav-item" onclick="showClientTab('client-brief')">
+        <span class="nav-icon">📋</span> Monthly Brief
+      </a>
+      <a href="#" class="nav-item" onclick="showClientTab('client-reports')">
+        <span class="nav-icon">📊</span> Reports
+      </a>
+      <a href="#" class="nav-item" onclick="showClientTab('client-contract')">
+        <span class="nav-icon">📄</span> Contract
+      </a>
+      <a href="#" class="nav-item" onclick="showClientTab('client-booking')">
+        <span class="nav-icon">📞</span> Book a Meeting
+      </a>
+    </nav>
+    <button class="btn-logout" onclick="logout()">← Logout</button>
+  </aside>
+  <main class="main-content">
+    <div id="tab-client-home" class="tab-content active">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title" id="client-welcome-title">Welcome!</h1>
+          <p class="page-subtitle">Here's your content overview for this month</p>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card stat-pink">
+          <div class="stat-number" id="client-stat-approved">0</div>
+          <div class="stat-label">Posts Approved</div>
+          <div class="stat-icon">✅</div>
+        </div>
+        <div class="stat-card stat-blue">
+          <div class="stat-number" id="client-stat-pending">0</div>
+          <div class="stat-label">Awaiting Your Approval</div>
+          <div class="stat-icon">⏳</div>
+        </div>
+        <div class="stat-card stat-yellow">
+          <div class="stat-number" id="client-stat-revision">0</div>
+          <div class="stat-label">Revisions Requested</div>
+          <div class="stat-icon">✏️</div>
+        </div>
+        <div class="stat-card stat-black">
+          <div class="stat-number" id="client-stat-published">0</div>
+          <div class="stat-label">Published This Month</div>
+          <div class="stat-icon">🚀</div>
+        </div>
+      </div>
+      <div class="client-upcoming">
+        <div class="dash-card">
+          <h3 class="dash-card-title">📸 Posts Awaiting Your Approval</h3>
+          <div id="client-pending-posts"></div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-card-title">📅 Upcoming Meeting</h3>
+          <div id="client-upcoming-meeting">
+            <p class="empty-state">No meetings scheduled</p>
+            <a href="https://cal.com/bundlemedia" target="_blank" class="btn-primary" style="display:inline-block;margin-top:12px;text-decoration:none">Book a Meeting</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-client-calendar" class="tab-content">
+      <div class="page-header">
+        <h1 class="page-title">Content Calendar</h1>
+      </div>
+      <div class="client-posts-grid" id="client-posts-grid">
+        <p class="empty-state">No posts scheduled yet for this month.</p>
+      </div>
+    </div>
+
+    <div id="tab-client-brief" class="tab-content">
+      <div class="page-header">
+        <h1 class="page-title">Monthly Brief</h1>
+        <p class="page-subtitle">Tell us what's important this month</p>
+      </div>
+      <div class="brief-client-card">
+        <div class="brief-month-label" id="client-brief-month"></div>
+        <textarea class="brief-textarea" id="client-brief-text" placeholder="Share upcoming promotions, events, launches, tone changes, important dates... anything you need us to know this month!"></textarea>
+        <button class="btn-primary" onclick="submitClientBrief()">Submit Brief ✦</button>
+        <p class="brief-submitted" id="brief-submitted-msg" style="display:none">✅ Brief submitted! The team will review it.</p>
+      </div>
+    </div>
+
+    <div id="tab-client-reports" class="tab-content">
+      <div class="page-header">
+        <h1 class="page-title">Reports</h1>
+        <p class="page-subtitle">Your monthly performance analytics</p>
+      </div>
+      <div id="client-reports-list">
+        <p class="empty-state">No reports published yet.</p>
+      </div>
+    </div>
+
+    <div id="tab-client-contract" class="tab-content">
+      <div class="page-header">
+        <h1 class="page-title">Your Contract</h1>
+        <p class="page-subtitle">View and download your service agreement</p>
+      </div>
+      <div id="client-contract-view">
+        <div class="contract-placeholder">
+          <div class="contract-icon">📄</div>
+          <p>Your contract will appear here once uploaded by the Bundle Media team.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-client-booking" class="tab-content">
+      <div class="page-header">
+        <h1 class="page-title">Book a Meeting</h1>
+        <p class="page-subtitle">Schedule time with the Bundle Media team</p>
+      </div>
+      <div class="booking-embed">
+        <iframe src="https://cal.com/bundlemedia" width="100%" height="700" frameborder="0"></iframe>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODALS -->
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal()"></div>
+
+<!-- Add Client Modal -->
+<div id="modal-add-client" class="modal">
+  <div class="modal-header">
+    <h2>Add New Client</h2>
+    <button class="modal-close" onclick="closeModal()">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Client Name *</label>
+        <input type="text" id="new-client-name" class="input-styled" placeholder="Client name" />
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select class="select-styled" id="new-client-status">
+          <option value="active">Active</option>
+          <option value="paused">Paused</option>
+          <option value="offboarded">Offboarded</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Contact Name</label>
+      <input type="text" id="new-client-contact" class="input-styled" placeholder="Main contact person" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Contact Email</label>
+        <input type="email" id="new-client-email" class="input-styled" placeholder="email@client.com" />
+      </div>
+      <div class="form-group">
+        <label>Contact Phone</label>
+        <input type="text" id="new-client-phone" class="input-styled" placeholder="+27 82 000 0000" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Platforms</label>
+      <div class="platform-checks">
+        <label class="check-pill"><input type="checkbox" name="platform" value="facebook" /> Facebook</label>
+        <label class="check-pill"><input type="checkbox" name="platform" value="instagram" /> Instagram</label>
+        <label class="check-pill"><input type="checkbox" name="platform" value="linkedin" /> LinkedIn</label>
+        <label class="check-pill"><input type="checkbox" name="platform" value="tiktok" /> TikTok</label>
+        <label class="check-pill"><input type="checkbox" name="platform" value="youtube" /> YouTube</label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Monthly Singles</label>
+        <input type="number" id="new-client-singles" class="input-styled" value="0" min="0" />
+      </div>
+      <div class="form-group">
+        <label>Monthly Carousels</label>
+        <input type="number" id="new-client-carousels" class="input-styled" value="0" min="0" />
+      </div>
+      <div class="form-group">
+        <label>Monthly Reels</label>
+        <input type="number" id="new-client-reels" class="input-styled" value="0" min="0" />
+      </div>
+      <div class="form-group">
+        <label>Stories</label>
+        <input type="number" id="new-client-stories" class="input-styled" value="4" min="0" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Google Drive Link</label>
+      <input type="url" id="new-client-drive" class="input-styled" placeholder="https://drive.google.com/..." />
+    </div>
+    <div class="form-group">
+      <label>Client Login Email (for portal access)</label>
+      <input type="email" id="new-client-login-email" class="input-styled" placeholder="client@brand.com" />
+    </div>
+    <div class="form-group">
+      <label>Internal Notes (agency only)</label>
+      <textarea class="input-styled" id="new-client-notes" rows="3" placeholder="Brand voice, key contacts, special instructions..."></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveClient()">Save Client ✦</button>
+  </div>
+</div>
+
+<!-- Add Event Modal -->
+<div id="modal-add-event" class="modal">
+  <div class="modal-header">
+    <h2>Add Calendar Event</h2>
+    <button class="modal-close" onclick="closeModal()">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label>Event Title *</label>
+      <input type="text" id="new-event-title" class="input-styled" placeholder="Event name" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date *</label>
+        <input type="date" id="new-event-date" class="input-styled" />
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select class="select-styled" id="new-event-type">
+          <option value="birthday">🎂 Birthday</option>
+          <option value="meeting">📅 Meeting</option>
+          <option value="holiday">🌍 Public Holiday</option>
+          <option value="deadline">📋 Deadline</option>
+          <option value="office">🏢 Office Day</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <input type="text" id="new-event-notes" class="input-styled" placeholder="Additional notes..." />
+    </div>
+    <div class="form-group" id="meeting-link-group" style="display:none">
+      <label>Meeting Link</label>
+      <input type="url" id="new-event-link" class="input-styled" placeholder="https://meet.google.com/..." />
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveEvent()">Save Event ✦</button>
+  </div>
+</div>
+
+<!-- Add Post Modal -->
+<div id="modal-add-post" class="modal modal-wide">
+  <div class="modal-header">
+    <h2>Add Content Post</h2>
+    <button class="modal-close" onclick="closeModal()">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Client *</label>
+        <select class="select-styled" id="new-post-client"></select>
+      </div>
+      <div class="form-group">
+        <label>Platform *</label>
+        <select class="select-styled" id="new-post-platform">
+          <option value="instagram">Instagram</option>
+          <option value="facebook">Facebook</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="tiktok">TikTok</option>
+          <option value="youtube">YouTube</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Post Type</label>
+        <select class="select-styled" id="new-post-type">
+          <option value="single">Single</option>
+          <option value="carousel">Carousel</option>
+          <option value="reel">Reel</option>
+          <option value="story">Story</option>
+          <option value="video">Video</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Scheduled Date</label>
+        <input type="date" id="new-post-date" class="input-styled" />
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select class="select-styled" id="new-post-status">
+          <option value="draft">Draft</option>
+          <option value="review">In Review</option>
+          <option value="pending">Pending Approval</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Caption</label>
+      <textarea class="input-styled" id="new-post-caption" rows="5" placeholder="Post caption..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Hashtags</label>
+      <input type="text" id="new-post-hashtags" class="input-styled" placeholder="#bundlemedia #socialmedia" />
+    </div>
+    <div class="form-group">
+      <label>Visual Brief / Asset Link</label>
+      <input type="url" id="new-post-asset" class="input-styled" placeholder="Canva link or Drive URL" />
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="savePost()">Save Post ✦</button>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div id="modal-add-task" class="modal">
+  <div class="modal-header">
+    <h2>Add Task</h2>
+    <button class="modal-close" onclick="closeModal()">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label>Assign To</label>
+      <select class="select-styled" id="new-task-person">
+        <option value="megan">Megan</option>
+        <option value="stacey">Stacey</option>
+        <option value="casey">Casey</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Task *</label>
+      <input type="text" id="new-task-text" class="input-styled" placeholder="What needs to be done?" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Client Tag</label>
+        <select class="select-styled" id="new-task-client">
+          <option value="">No specific client</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Due Date</label>
+        <input type="date" id="new-task-due" class="input-styled" />
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select class="select-styled" id="new-task-priority">
+          <option value="high">🔴 High</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveTask()">Add Task ✦</button>
+  </div>
+</div>
+
+<!-- Client Detail Modal -->
+<div id="modal-client-detail" class="modal modal-wide">
+  <div class="modal-header">
+    <h2 id="client-detail-name"></h2>
+    <button class="modal-close" onclick="closeModal()">×</button>
+  </div>
+  <div class="modal-body" id="client-detail-body"></div>
+  <div class="modal-footer">
+    <button class="btn-secondary" onclick="closeModal()">Close</button>
+    <button class="btn-primary" onclick="editClient()">Edit Client</button>
+  </div>
+</div>
+
+<!-- Post Detail Modal -->
+<div id="modal-post-detail" class="modal modal-wide">
+  <div class="modal-header">
+    <h2>Post Details</h2>
+    <button class="modal-close" onclick="closeModal()">×</button>
+  </div>
+  <div class="modal-body" id="post-detail-body"></div>
+  <div class="modal-footer">
+    <button class="btn-secondary" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div id="modal-report" class="modal modal-wide">
+  <div class="modal-header">
+    <h2 id="report-modal-title">New Report</h2>
+    <button class="modal-close" onclick="closeModal()">×</button>
+  </div>
+  <div class="modal-body" id="report-modal-body"></div>
+  <div class="modal-footer">
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveReport()">Save & Publish ✦</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
