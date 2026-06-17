@@ -562,7 +562,10 @@ input,textarea,select{font-family:'Poppins',sans-serif}
             <div class="page-title">Content Board</div>
             <div class="page-sub">Drag-and-drop Kanban for all client posts</div>
           </div>
-          <button class="add-btn" onclick="openPostModal()">+ New Post</button>
+          <div style="display:flex;gap:10px">
+            <button class="add-btn" style="background:var(--blue)" onclick="openBulkImportModal()">📄 Add Content from Doc</button>
+            <button class="add-btn" onclick="openPostModal()">+ Single Post</button>
+          </div>
         </div>
         <div class="kanban-board" id="kanban-board">
           <div class="loading"><div class="spinner"></div>Loading board...</div>
@@ -1147,6 +1150,60 @@ input,textarea,select{font-family:'Poppins',sans-serif}
   </div>
 </div>
 
+<!-- Bulk Import Modal -->
+<div class="modal-overlay" id="bulk-import-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">📄 Add Content from Google Doc</div>
+      <button class="modal-close" onclick="closeModal('bulk-import-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--gray3);margin-bottom:20px;line-height:1.6">
+        Paste your Google Doc link below. The Doc must be set to <strong>"Anyone with link can view"</strong>.<br><br>
+        Format each post in the Doc as:<br>
+        <code style="background:var(--gray);padding:2px 6px;border-radius:4px;font-size:12px">2 July 2026</code> (date on its own line)<br>
+        Caption text below the date<br>
+        Hashtags starting with # at the end
+      </p>
+      <div class="form-group">
+        <label>Client *</label>
+        <select id="bulk-client">
+          <option value="">Select client...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Platform</label>
+        <select id="bulk-platform">
+          <option value="Instagram">Instagram</option>
+          <option value="Facebook">Facebook</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="TikTok">TikTok</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Post Type</label>
+        <select id="bulk-type">
+          <option value="Single">Single</option>
+          <option value="Carousel">Carousel</option>
+          <option value="Reel">Reel</option>
+          <option value="Story">Story</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Google Doc URL *</label>
+        <input type="url" id="bulk-doc-url" placeholder="https://docs.google.com/document/d/...">
+      </div>
+      <div id="bulk-status" style="display:none;margin-top:12px;padding:14px;border-radius:10px;font-size:13px;line-height:1.6"></div>
+      <div id="bulk-preview" style="display:none;margin-top:16px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('bulk-import-modal')">Cancel</button>
+      <button class="btn btn-blue" id="bulk-fetch-btn" onclick="fetchBulkDoc()">📥 Read Doc</button>
+      <button class="btn btn-pink" id="bulk-save-btn" style="display:none" onclick="saveBulkPosts()">✅ Save All Posts</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1569,7 +1626,7 @@ window.saveClient = async () => {
 };
 
 function populateClientSelects() {
-  ['post-client','todo-client','rpt-client'].forEach(id=>{
+  ['post-client','todo-client','rpt-client','bulk-client'].forEach(id=>{
     const sel = document.getElementById(id);
     if(!sel) return;
     const blank = id==='todo-client' ? '<option value="">None</option>' : '<option value="">Select client...</option>';
@@ -2537,6 +2594,159 @@ window.deleteCrmItem = async (id, colId) => {
   loadCrmBoards();
 };
 
+// ── BULK CONTENT IMPORT FROM GOOGLE DOC ──
+let parsedBulkPosts = [];
+
+window.openBulkImportModal = () => {
+  const sel = document.getElementById('bulk-client');
+  sel.innerHTML = '<option value="">Select client...</option>' +
+    allClients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('bulk-doc-url').value = '';
+  document.getElementById('bulk-status').style.display = 'none';
+  document.getElementById('bulk-preview').style.display = 'none';
+  document.getElementById('bulk-save-btn').style.display = 'none';
+  document.getElementById('bulk-fetch-btn').style.display = 'block';
+  parsedBulkPosts = [];
+  openModal('bulk-import-modal');
+};
+
+window.fetchBulkDoc = async () => {
+  const clientId = document.getElementById('bulk-client').value;
+  const url = document.getElementById('bulk-doc-url').value.trim();
+  const status = document.getElementById('bulk-status');
+  if(!clientId) { showToast('Please select a client', 'error'); return; }
+  if(!url) { showToast('Please paste a Google Doc URL', 'error'); return; }
+
+  status.style.display = 'block';
+  status.style.background = 'var(--blue-light)';
+  status.style.color = 'var(--blue)';
+  status.textContent = '⏳ Reading document...';
+
+  // Extract doc ID
+  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if(!match) { status.textContent = '❌ Could not find Doc ID in URL'; status.style.background='#ffebee'; status.style.color='#c62828'; return; }
+
+  const docId = match[1];
+  const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
+
+  try {
+    const res = await fetch(exportUrl);
+    if(!res.ok) throw new Error('Could not read doc — make sure it is set to "Anyone with link can view"');
+    const text = await res.text();
+    parsedBulkPosts = parseBulkDoc(text, clientId);
+
+    if(!parsedBulkPosts.length) {
+      status.textContent = '⚠️ No posts found. Make sure each post starts with a date like "2 July 2026".';
+      status.style.background = '#fff8e1'; status.style.color = '#b8a600';
+      return;
+    }
+
+    // Show preview
+    status.textContent = `✅ Found ${parsedBulkPosts.length} posts! Review below then click Save All Posts.`;
+    status.style.background = '#e8f5e9'; status.style.color = '#2e7d32';
+
+    const preview = document.getElementById('bulk-preview');
+    preview.style.display = 'block';
+    preview.innerHTML = `<div style="font-weight:700;font-size:13px;margin-bottom:10px">Preview (${parsedBulkPosts.length} posts):</div>` +
+      parsedBulkPosts.map((p,i)=>`
+        <div style="background:var(--gray);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="font-weight:700;font-size:13px;color:var(--pink)">${p.dateDisplay}</span>
+            <span style="font-size:11px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.platform}</span>
+            <span style="font-size:11px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.type}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text);margin-bottom:6px;max-height:60px;overflow:hidden">${p.caption.substring(0,150)}${p.caption.length>150?'...':''}</div>
+          <div style="font-size:11px;color:var(--blue)">${p.hashtags.substring(0,80)}${p.hashtags.length>80?'...':''}</div>
+        </div>`).join('');
+
+    document.getElementById('bulk-save-btn').style.display = 'block';
+    document.getElementById('bulk-fetch-btn').textContent = '🔄 Re-read Doc';
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+    status.style.background = '#ffebee'; status.style.color = '#c62828';
+  }
+};
+
+function parseBulkDoc(text, clientId) {
+  const client = allClients.find(c=>c.id===clientId);
+  const platform = document.getElementById('bulk-platform').value || 'Instagram';
+  const type = document.getElementById('bulk-type').value || 'Single';
+  const lines = text.split('\n').map(l=>l.trim());
+  const posts = [];
+
+  // Date pattern: "2 July 2026" or "14 July 2026" etc
+  const datePattern = /^(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i;
+  const months = {january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+
+  let currentDate = null;
+  let currentDateDisplay = '';
+  let captionLines = [];
+  let hashtagLines = [];
+  let inHashtags = false;
+
+  const savePost = () => {
+    if(!currentDate || (!captionLines.length && !hashtagLines.length)) return;
+    const caption = captionLines.join('\n').trim();
+    const hashtags = hashtagLines.join(' ').trim();
+    if(caption || hashtags) {
+      posts.push({
+        clientId, clientName: client?.name||'',
+        platform, type,
+        date: currentDate,
+        dateDisplay: currentDateDisplay,
+        caption, hashtags,
+        status: 'Draft',
+        comments: [],
+        createdAt: new Date().toISOString()
+      });
+    }
+  };
+
+  for(const line of lines) {
+    const dateMatch = line.match(datePattern);
+    if(dateMatch) {
+      // Save previous post
+      savePost();
+      // Start new post
+      const day = dateMatch[1].padStart(2,'0');
+      const month = String(months[dateMatch[2].toLowerCase()]).padStart(2,'0');
+      const year = dateMatch[3];
+      currentDate = `${year}-${month}-${day}`;
+      currentDateDisplay = line;
+      captionLines = [];
+      hashtagLines = [];
+      inHashtags = false;
+    } else if(currentDate) {
+      if(line.startsWith('#') || inHashtags) {
+        inHashtags = true;
+        if(line) hashtagLines.push(line);
+      } else if(line) {
+        captionLines.push(line);
+      }
+    }
+  }
+  savePost(); // Save last post
+  return posts;
+}
+
+window.saveBulkPosts = async () => {
+  if(!parsedBulkPosts.length) return;
+  const btn = document.getElementById('bulk-save-btn');
+  btn.textContent = '⏳ Saving...';
+  btn.disabled = true;
+  let saved = 0;
+  for(const post of parsedBulkPosts) {
+    await addDoc(collection(db,'posts'), post);
+    saved++;
+  }
+  showToast(`✅ ${saved} posts added to the Content Board!`);
+  closeModal('bulk-import-modal');
+  loadKanban();
+  btn.textContent = '✅ Save All Posts';
+  btn.disabled = false;
+  parsedBulkPosts = [];
+};
+
 // ── GOOGLE DOC IMPORT ──
 window.importFromGoogleDoc = async () => {
   const url = document.getElementById('gdoc-url').value.trim();
@@ -2649,24 +2859,34 @@ async function loadBriefing() {
       </div>
       <!-- Body -->
       <div class="brief-card-body">
-        <div>
-          <div class="brief-section-label">📋 Agency Notes</div>
+        <!-- Posted notes thread -->
+        <div id="brief-thread-${c.id}">
+          ${(b.notes&&b.notes.length) ? b.notes.map((n,ni)=>`
+            <div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative">
+              <div style="font-size:11px;font-weight:700;color:var(--pink);margin-bottom:4px">${n.author} &middot; ${n.time}</div>
+              <div style="font-size:13px;color:var(--text);white-space:pre-wrap">${n.text}</div>
+              <button onclick="deleteBriefNote('${c.id}','${month}','${b.id||''}',${ni})"
+                style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--gray3);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;line-height:1" title="Delete">✕</button>
+            </div>`).join('') : '<div style="font-size:12px;color:var(--gray3);padding:4px 0 8px">No notes posted yet.</div>'}
+        </div>
+        ${b.clientNotes ? `
+          <div class="brief-section-label">💬 Client Submitted Brief</div>
+          <div class="brief-client-notes-box" style="margin-bottom:8px">${b.clientNotes}</div>` : ''}
+        <!-- New note input -->
+        <div style="border-top:1px solid var(--gray2);padding-top:10px">
           <textarea class="brief-textarea" id="brief-notes-${c.id}"
-            placeholder="Add internal notes for this client..."
-            onkeydown="if(event.ctrlKey&&event.key==='Enter')saveBriefNow('${c.id}','${month}','${b.id||''}')"
-          >${b.agencyNotes||''}</textarea>
+            placeholder="Type a note and click Post..."
+            style="min-height:56px"
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')postBriefNote('${c.id}','${month}','${b.id||''}')"
+          ></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+            <span style="font-size:11px;color:var(--gray3)">Ctrl+Enter to post</span>
+            <button onclick="postBriefNote('${c.id}','${month}','${b.id||''}')"
+              style="padding:6px 18px;background:var(--pink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">
+              Post Note
+            </button>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
-          <span id="brief-saved-${c.id}" style="font-size:11px;color:#2e7d32;display:none">✅ Saved</span>
-          <button onclick="saveBriefNow('${c.id}','${month}','${b.id||''}')"
-            style="margin-left:auto;padding:6px 16px;background:var(--pink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">
-            Save Notes
-          </button>
-        </div>
-        ${b.clientNotes ? `<div>
-          <div class="brief-section-label" style="margin-top:8px">💬 Client Notes</div>
-          <div class="brief-client-notes-box">${b.clientNotes}</div>
-        </div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -2679,33 +2899,71 @@ window.updateBriefStatus = async (clientId, month, briefId, selectEl) => {
   await saveBriefInline(clientId, month, briefId);
 };
 
-window.saveBriefNow = async (clientId, month, briefId) => {
+window.postBriefNote = async (clientId, month, briefId) => {
   const notesEl = document.getElementById('brief-notes-'+clientId);
   const statusEl = document.getElementById('brief-status-'+clientId);
-  const savedEl = document.getElementById('brief-saved-'+clientId);
-  if(!notesEl || !statusEl) return;
+  if(!notesEl) return;
+  const text = notesEl.value.trim();
+  if(!text) { showToast('Please type a note first', 'error'); return; }
+  const newNote = {
+    text,
+    author: currentUser.name,
+    time: new Date().toLocaleString('en-ZA', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+  };
   const data = {
     clientId, month,
-    agencyNotes: notesEl.value.trim(),
-    status: statusEl.value,
+    status: statusEl?.value || 'In Progress',
     updatedAt: new Date().toISOString()
   };
   if(briefId) {
-    await updateDoc(doc(db,'briefs',briefId), data);
+    // Get existing notes and append
+    const snap = await getDoc(doc(db,'briefs',briefId));
+    const existing = snap.data()?.notes || [];
+    existing.push(newNote);
+    await updateDoc(doc(db,'briefs',briefId), {...data, notes: existing});
   } else {
-    const newDoc = await addDoc(collection(db,'briefs'),{...data, createdAt:new Date().toISOString()});
-    // Store new doc ID for future saves on this card
-    const btn = notesEl.closest('.brief-card-body').querySelector('button');
-    if(btn) btn.setAttribute('onclick', `saveBriefNow('${clientId}','${month}','${newDoc.id}')`);
+    const newDoc = await addDoc(collection(db,'briefs'),{
+      ...data, notes:[newNote], createdAt:new Date().toISOString()
+    });
+    briefId = newDoc.id;
+    // Update button with new doc id
+    const btn = notesEl.closest('.brief-card-body').querySelector('button[onclick*="postBriefNote"]');
+    if(btn) btn.setAttribute('onclick', `postBriefNote('${clientId}','${month}','${briefId}')`);
   }
-  // Show saved indicator
-  if(savedEl) {
-    savedEl.style.display = 'block';
-    setTimeout(()=>savedEl.style.display='none', 2500);
+  notesEl.value = '';
+  // Append note to thread immediately without full reload
+  const thread = document.getElementById('brief-thread-'+clientId);
+  if(thread) {
+    const noteCount = thread.querySelectorAll('[data-note]').length;
+    // Remove "no notes" message if present
+    const empty = thread.querySelector('div[style*="No notes"]');
+    if(empty) empty.remove();
+    const noteEl = document.createElement('div');
+    noteEl.setAttribute('data-note', briefId+'-'+Date.now());
+    noteEl.style.cssText = 'background:var(--gray);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative';
+    noteEl.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--pink);margin-bottom:4px">${newNote.author} &middot; ${newNote.time}</div>
+      <div style="font-size:13px;color:var(--text);white-space:pre-wrap">${newNote.text}</div>`;
+    thread.appendChild(noteEl);
   }
+  showToast('Note posted!');
 };
 
-// Keep saveBriefInline as alias for status changes
+window.deleteBriefNote = async (clientId, month, briefId, noteIndex) => {
+  if(!briefId || !confirm('Delete this note?')) return;
+  const snap = await getDoc(doc(db,'briefs',briefId));
+  const notes = snap.data()?.notes || [];
+  notes.splice(noteIndex, 1);
+  await updateDoc(doc(db,'briefs',briefId), {notes, updatedAt:new Date().toISOString()});
+  loadBriefing();
+};
+
+// Status change still saves
+window.saveBriefNow = async (clientId, month, briefId) => {
+  const statusEl = document.getElementById('brief-status-'+clientId);
+  if(!statusEl || !briefId) return;
+  await updateDoc(doc(db,'briefs',briefId), {status:statusEl.value, updatedAt:new Date().toISOString()});
+};
 window.saveBriefInline = window.saveBriefNow;
 
 window.openBriefModal = async (clientId, month, briefId='') => {
