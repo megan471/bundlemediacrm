@@ -3827,11 +3827,7 @@ async function fetchDocWithImages(docId) {
 
       // Extract text from cell2 — strip XML tags
       const captionText = cell2
-        .replace(/<w:br[^/]*/\/>/g, '\n') // line breaks
-        .replace(/<w:p[ >][^]*?<\/w:p>/g, match => {
-          const text = match.replace(/<[^>]+>/g, '').trim();
-          return text ? text + '\n' : '\n';
-        })
+        .replace(/<[^>]+>/g, ' ')
         .replace(/<[^>]+>/g, '')
         .trim();
 
