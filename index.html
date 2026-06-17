@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bundle Media CRM</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root {
   --pink: #DD0B82;
@@ -2851,9 +2852,9 @@ window.fetchBulkDoc = async () => {
       status.textContent = '🔑 Signing in to Google to read images...';
       try {
         const docData = await fetchDocWithImages(docId);
-        status.textContent = '🖼️ Fetching images from document...';
-        const elements = await extractDocContent(docData);
-        parsedBulkPosts = parseDocContentWithImages(elements, clientId);
+        status.textContent = '🖼️ Extracting text and images...';
+        const { textContent, images } = docData;
+        parsedBulkPosts = parseBulkDocWithImages(textContent, images, clientId);
         console.log('Used Google Docs API — images included');
       } catch(apiErr) {
         // Fall back to text export if API fails
@@ -2868,7 +2869,13 @@ window.fetchBulkDoc = async () => {
       status.textContent = '⏳ Reading document (text only — add Google API in Settings for images)...';
       const res = await fetch(`https://docs.google.com/document/d/${docId}/export?format=txt`);
       if(!res.ok) throw new Error('Could not read doc — make sure it is set to "Anyone with link can view"');
-      parsedBulkPosts = parseBulkDoc(await res.text(), clientId);
+      const rawText = await res.text();
+      // Show raw text to help debug date format issues
+      const preview = rawText.substring(0,800);
+      console.log('RAW doc text:', JSON.stringify(preview));
+      console.log('First lines:', rawText.split('\n').slice(0,15));
+      parsedBulkPosts = parseBulkDoc(rawText, clientId);
+      console.log('Posts found:', parsedBulkPosts.length);
     }
 
     if(!parsedBulkPosts.length) {
@@ -2921,10 +2928,24 @@ function parseBulkDoc(text, clientId) {
   const client = allClients.find(c=>c.id===clientId);
   const platforms = getSelectedPlatforms();
   const defaultType = document.getElementById('bulk-type').value || 'Single';
-  const rawLines = text.split('\n').map(l=>l.trim());
+  // Strip all Google Docs formatting artifacts before parsing
+  const cleanedText = text
+    .replace(/
+/g,'
+').replace(/
+/g,'
+')
+    .replace(/_{1,3}([^
+_]{1,50})_{1,3}/g,'$1')
+    .replace(/\*{1,3}([^
+*]{1,50})\*{1,3}/g,'$1')
+    .replace(/̲/g,'')
+    .replace(/[​-‍﻿]/g,'');
+  const rawLines = cleanedText.split('
+').map(l=>l.replace(/[_*~`]/g,'').trim());
   const posts = [];
 
-  const datePattern = /^(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i;
+  const datePattern = /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i;
   const months = {january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
 
   let currentDate = null;
@@ -3740,26 +3761,54 @@ function initGoogleAuth(resolve, reject) {
 
 // ── FETCH DOC WITH IMAGES via Google Docs API ──
 async function fetchDocWithImages(docId) {
-  // Ensure we have a valid token
-  if(!googleAccessToken) {
-    await signInWithGoogle();
-  }
-  // Fetch the doc JSON from Docs API
-  const res = await fetch(
-    `https://docs.googleapis.com/v1/documents/${docId}`,
-    { headers: { Authorization: `Bearer ${googleAccessToken}` } }
-  );
+  // Export the doc as a zip file — this contains the text AND all images as actual files
+  if(!googleAccessToken) await signInWithGoogle();
+
+  const exportUrl = `https://www.googleapis.com/drive/v3/files/${docId}/export?mimeType=application/zip`;
+  let res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${googleAccessToken}` } });
+
   if(!res.ok) {
-    // Token may have expired — try refreshing
+    // Token expired — refresh and retry
     await signInWithGoogle();
-    const res2 = await fetch(
-      `https://docs.googleapis.com/v1/documents/${docId}`,
-      { headers: { Authorization: `Bearer ${googleAccessToken}` } }
-    );
-    if(!res2.ok) throw new Error('Could not read Doc. Make sure it is shared and you are signed in with the right account.');
-    return res2.json();
+    res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${googleAccessToken}` } });
+    if(!res.ok) throw new Error('Could not export Doc. Make sure it is shared with your Google account.');
   }
-  return res.json();
+
+  const arrayBuffer = await res.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+
+  // Extract text content
+  let textContent = '';
+  const textFile = zip.file('word/document.xml') || zip.file(/\.xml$/)[0];
+  if(textFile) {
+    const xml = await textFile.async('string');
+    // Strip XML tags to get plain text
+    textContent = xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  // Alternatively try the plain text export for cleaner text
+  const txtRes = await fetch(`https://www.googleapis.com/drive/v3/files/${docId}/export?mimeType=text/plain`,
+    { headers: { Authorization: `Bearer ${googleAccessToken}` } });
+  if(txtRes.ok) textContent = await txtRes.text();
+
+  // Extract images from the zip
+  const images = {};
+  let imgIndex = 0;
+  const imageFiles = Object.keys(zip.files).filter(f =>
+    f.match(/\.(png|jpg|jpeg|gif|webp)$/i) && !zip.files[f].dir
+  );
+
+  for(const imgPath of imageFiles) {
+    const imgBlob = await zip.files[imgPath].async('blob');
+    const ext = imgPath.split('.').pop().toLowerCase();
+    const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' :
+                     ext === 'png' ? 'image/png' : 'image/' + ext;
+    const base64 = await blobToBase64(new Blob([imgBlob], {type: mimeType}));
+    images[imgIndex] = { path: imgPath, base64 };
+    imgIndex++;
+  }
+
+  return { textContent, images };
 }
 
 // Extract plain text + inline images from Docs API response
@@ -3825,13 +3874,78 @@ function blobToBase64(blob) {
   });
 }
 
+// Parse text + image map into posts — images assigned in order they appear
+function parseBulkDocWithImages(textContent, images, clientId) {
+  const client = allClients.find(c=>c.id===clientId);
+  const platforms = getSelectedPlatforms();
+  const defaultType = document.getElementById('bulk-type')?.value || 'Single';
+  const months = {january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+  const datePattern = /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i;
+
+  const lines = textContent.split('\n').map(l=>l.trim()).filter(Boolean);
+  const posts = [];
+  let currentDate = null, currentDateDisplay = '';
+  let captionLines = [], hashtagLines = [];
+  let currentType = defaultType, inHashtags = false;
+  let imageIndex = 0; // assign images in order to posts
+
+  const savePost = () => {
+    if(!currentDate) return;
+    const caption = captionLines.join('\n').trim();
+    const hashtags = hashtagLines.join(' ').trim();
+    if(caption || hashtags) {
+      // Assign next available image to this post
+      const img = images[imageIndex] ? images[imageIndex].base64 : '';
+      if(images[imageIndex]) imageIndex++;
+      posts.push({
+        clientId, clientName: client?.name||'', platforms, type: currentType,
+        date: currentDate, dateDisplay: currentDateDisplay,
+        caption, hashtags, asset: img,
+        status: 'Draft', comments: [], createdAt: new Date().toISOString()
+      });
+    }
+  };
+
+  for(const line of lines) {
+    // Strip any remaining formatting chars from line before testing
+    const cleanLine = line.replace(/[_*~`]/g,'').trim();
+    const dateMatch = cleanLine.match(datePattern);
+    if(dateMatch && cleanLine.length < 30) { // date lines are short
+      savePost();
+      const day = dateMatch[1].padStart(2,'0');
+      const month = String(months[dateMatch[2].toLowerCase()]).padStart(2,'0');
+      const year = dateMatch[3];
+      currentDate = `${year}-${month}-${day}`;
+      currentDateDisplay = cleanLine;
+      captionLines = []; hashtagLines = []; currentType = defaultType; inHashtags = false;
+    } else if(currentDate) {
+      const imgMatch = cleanLine.match(/^image:\s*(https?:\/\/\S+)/i);
+      const tl = cleanLine.toLowerCase().trim();
+      if(imgMatch) {
+        imageUrl = imgMatch[1];
+      } else if(['reel','carousel','single','story'].includes(tl)) {
+        if(tl==='reel') currentType='Reel';
+        else if(tl==='carousel') currentType='Carousel';
+        else if(tl==='story') currentType='Story';
+        else currentType='Single';
+      } else if(line.startsWith('#') || inHashtags) {
+        inHashtags=true; hashtagLines.push(line);
+      } else {
+        captionLines.push(line);
+      }
+    }
+  }
+  savePost();
+  return posts;
+}
+
 // Parse the structured content into posts with images
 function parseDocContentWithImages(elements, clientId) {
   const client = allClients.find(c=>c.id===clientId);
   const platforms = getSelectedPlatforms();
   const defaultType = document.getElementById('bulk-type').value || 'Single';
   const months = {january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
-  const datePattern = /^(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i;
+  const datePattern = /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i;
 
   const posts = [];
   let currentDate = null, currentDateDisplay = '', captionLines = [], hashtagLines = [];
