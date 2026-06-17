@@ -3830,8 +3830,7 @@ async function fetchDocWithImages(docId) {
           for(const pe of c.paragraph.elements || []) {
             if(pe.textRun) captionText += pe.textRun.content;
           }
-          captionText += '
-';
+          captionText += '\n';
         }
       }
 
