@@ -2928,21 +2928,9 @@ function parseBulkDoc(text, clientId) {
   const client = allClients.find(c=>c.id===clientId);
   const platforms = getSelectedPlatforms();
   const defaultType = document.getElementById('bulk-type').value || 'Single';
-  // Strip all Google Docs formatting artifacts before parsing
-  const cleanedText = text
-    .replace(/
-/g,'
-').replace(/
-/g,'
-')
-    .replace(/_{1,3}([^
-_]{1,50})_{1,3}/g,'$1')
-    .replace(/\*{1,3}([^
-*]{1,50})\*{1,3}/g,'$1')
-    .replace(/̲/g,'')
-    .replace(/[​-‍﻿]/g,'');
-  const rawLines = cleanedText.split('
-').map(l=>l.replace(/[_*~`]/g,'').trim());
+  // Clean Google Docs export artifacts
+  const cleanedText = text.split('').filter(c => c.charCodeAt(0) !== 0x0332 && c.charCodeAt(0) !== 0x200B).join('');
+  const rawLines = cleanedText.split('\n').map(l => l.replace(/[_*~`]/g,'').trim());
   const posts = [];
 
   const datePattern = /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i;
