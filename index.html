@@ -94,15 +94,15 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .card-title{font-size:15px;font-weight:700;margin-bottom:16px}
 
 /* ── CLIENTS ── */
-.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.client-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s;border:2px solid transparent}
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.client-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s;border:2px solid transparent}
 .client-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--pink)}
-.client-card-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.client-avatar{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--white);flex-shrink:0}
-.client-name{font-size:15px;font-weight:700}
-.client-since{font-size:12px;color:var(--gray3)}
-.platform-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.platform-tag{padding:4px 10px;border-radius:50px;font-size:11px;font-weight:600}
+.client-card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.client-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--white);flex-shrink:0}
+.client-name{font-size:14px;font-weight:700}
+.client-since{font-size:11px;color:var(--gray3)}
+.platform-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.platform-tag{padding:3px 8px;border-radius:50px;font-size:10px;font-weight:600}
 .tag-instagram{background:#fce4ec;color:#c2185b}
 .tag-facebook{background:#e3f2fd;color:#1565c0}
 .tag-linkedin{background:#e8f5e9;color:#2e7d32}
@@ -140,18 +140,18 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .btn-danger:hover{background:#c62828}
 
 /* ── CALENDAR ── */
-.cal-nav{display:flex;align-items:center;gap:16px;margin-bottom:12px}
-.cal-month{font-size:22px;font-weight:800}
-.cal-nav-btn{width:36px;height:36px;border:2px solid var(--gray2);border-radius:8px;background:var(--white);font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.cal-nav{display:flex;align-items:center;gap:16px}
+.cal-month{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.cal-nav-btn{width:38px;height:38px;border:2px solid var(--gray2);border-radius:10px;background:var(--white);font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .cal-nav-btn:hover{border-color:var(--pink);color:var(--pink)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--gray2);border-radius:var(--radius);overflow:hidden;flex:1}
-.cal-day-header{background:var(--black);color:var(--white);padding:10px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.cal-day{background:var(--white);height:calc((100vh - 260px) / 6);min-height:100px;padding:10px;cursor:pointer;transition:background .2s;overflow:hidden}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:2px;background:var(--gray2);border-radius:14px;overflow:hidden;flex:1;min-height:0}
+.cal-day-header{background:var(--black);color:var(--white);padding:14px 10px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.cal-day{background:var(--white);padding:14px 12px 10px;cursor:pointer;transition:background .2s;overflow:hidden;display:flex;flex-direction:column}
 .cal-day:hover{background:var(--pink-light)}
-.cal-day.other-month{background:#fafafa}
-.cal-day.today .day-num{background:var(--pink);color:var(--white);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
-.day-num{font-size:13px;font-weight:600;margin-bottom:4px;width:26px;height:26px;display:flex;align-items:center;justify-content:center}
-.cal-event{font-size:10px;padding:2px 6px;border-radius:4px;margin-bottom:2px;font-weight:600;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-day.other-month{background:#f9f9f7}
+.cal-day.today .day-num{background:var(--pink);color:var(--white);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:800}
+.day-num{font-size:14px;font-weight:600;margin-bottom:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.cal-event{font-size:11px;padding:3px 8px;border-radius:5px;margin-bottom:3px;font-weight:600;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ev-pink{background:#fce4ec;color:#c2185b}
 .ev-blue{background:#e3f2fd;color:#1565c0}
 .ev-yellow{background:#fffde7;color:#f57f17}
@@ -227,13 +227,19 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .metric-value{font-size:24px;font-weight:800;margin-top:4px;color:var(--text)}
 
 /* ── BRIEFING ── */
-.brief-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-.brief-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s}
+.brief-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.brief-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);transition:all .2s;display:flex;flex-direction:column;gap:12px}
 .brief-card:hover{box-shadow:var(--shadow-lg)}
-.brief-status{padding:4px 12px;border-radius:50px;font-size:12px;font-weight:700}
+.brief-status-select{padding:4px 10px;border-radius:50px;font-size:12px;font-weight:700;border:none;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;text-align:center}
 .brief-not-started{background:var(--gray);color:var(--gray3)}
 .brief-in-progress{background:var(--yellow-light);color:#b8a600}
 .brief-submitted{background:#e8f5e9;color:#2e7d32}
+.brief-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--gray3);margin-bottom:4px}
+.brief-textarea{width:100%;border:1.5px solid var(--gray2);border-radius:8px;padding:10px 12px;font-size:13px;font-family:"Poppins",sans-serif;resize:vertical;min-height:72px;outline:none;color:var(--text);transition:border-color .2s;background:var(--white)}
+.brief-textarea:focus{border-color:var(--pink)}
+.brief-client-notes-box{background:var(--gray);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--gray3);min-height:48px;font-style:italic}
+.brief-save-btn{align-self:flex-end;padding:6px 16px;background:var(--pink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s;font-family:"Poppins",sans-serif}
+.brief-save-btn:hover{background:#c4076e}
 
 /* ── SETTINGS ── */
 .settings-section{background:var(--white);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
@@ -478,14 +484,14 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 
       <!-- ── CLIENTS ── -->
       <div class="page" id="page-clients">
-        <div class="page-actions">
+        <div class="page-actions" style="margin-bottom:16px">
           <div>
             <div class="page-title">Clients</div>
-            <div class="page-sub">17 active clients</div>
+            <div class="page-sub" id="clients-count-sub">17 active clients</div>
           </div>
           <button class="add-btn" onclick="openClientModal()">+ Add Client</button>
         </div>
-        <div class="search-bar">
+        <div class="search-bar" style="max-width:100%">
           <input class="search-input" type="text" id="client-search" placeholder="🔍  Search clients..." oninput="filterClients()">
         </div>
         <div class="clients-grid" id="clients-grid">
@@ -494,30 +500,36 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       </div>
 
       <!-- ── CALENDAR ── -->
-      <div class="page" id="page-calendar" style="display:none;flex-direction:column;height:calc(100vh - 64px)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0">
-          <div style="display:flex;align-items:center;gap:12px">
-            <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
-            <div class="cal-month" id="cal-month-label">June 2026</div>
-            <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      <div class="page" id="page-calendar" style="display:none;flex-direction:column;position:fixed;top:64px;left:220px;right:0;bottom:0;z-index:1;background:var(--white)">
+        <!-- Header with breathing room -->
+        <div style="padding:20px 28px 16px;flex-shrink:0;background:var(--white);border-bottom:1px solid var(--gray2)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:16px">
+              <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+              <div class="cal-month" id="cal-month-label">June 2026</div>
+              <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+            </div>
+            <button class="add-btn" onclick="openEventModal()">+ Add Event</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span class="cal-event ev-pink" style="font-size:11px;padding:3px 10px">🎂 Birthdays</span>
-            <span class="cal-event ev-blue" style="font-size:11px;padding:3px 10px">📞 Meetings</span>
-            <span class="cal-event ev-yellow" style="font-size:11px;padding:3px 10px">🎉 Holidays</span>
-            <span class="cal-event ev-black" style="font-size:11px;padding:3px 10px">⏰ Deadlines</span>
-            <span class="cal-event ev-purple" style="font-size:11px;padding:3px 10px">🏢 Office Days</span>
-            <button class="add-btn" onclick="openEventModal()" style="padding:8px 14px;font-size:13px">+ Add Event</button>
+            <span class="cal-event ev-pink" style="font-size:12px;padding:5px 14px">🎂 Birthdays</span>
+            <span class="cal-event ev-blue" style="font-size:12px;padding:5px 14px">📞 Meetings</span>
+            <span class="cal-event ev-yellow" style="font-size:12px;padding:5px 14px">🎉 Holidays</span>
+            <span class="cal-event ev-black" style="font-size:12px;padding:5px 14px">⏰ Deadlines</span>
+            <span class="cal-event ev-purple" style="font-size:12px;padding:5px 14px">🏢 Office Days</span>
           </div>
         </div>
-        <div class="cal-grid" id="cal-grid" style="flex:1">
-          <div class="cal-day-header">Sun</div>
-          <div class="cal-day-header">Mon</div>
-          <div class="cal-day-header">Tue</div>
-          <div class="cal-day-header">Wed</div>
-          <div class="cal-day-header">Thu</div>
-          <div class="cal-day-header">Fri</div>
-          <div class="cal-day-header">Sat</div>
+        <!-- Grid flush to all edges -->
+        <div style="flex:1;min-height:0;padding:16px;display:flex;flex-direction:column">
+          <div class="cal-grid" id="cal-grid" style="flex:1;min-height:0">
+            <div class="cal-day-header">Sun</div>
+            <div class="cal-day-header">Mon</div>
+            <div class="cal-day-header">Tue</div>
+            <div class="cal-day-header">Wed</div>
+            <div class="cal-day-header">Thu</div>
+            <div class="cal-day-header">Fri</div>
+            <div class="cal-day-header">Sat</div>
+          </div>
         </div>
       </div>
 
@@ -536,7 +548,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       </div>
 
       <!-- ── MONTHLY TRACKER ── -->
-      <div class="page" id="page-tracker" style="display:none;flex-direction:column;height:calc(100vh - 64px);padding:0">
+      <div class="page" id="page-tracker" style="display:none;flex-direction:column;position:fixed;top:64px;left:220px;right:0;bottom:0;z-index:1;background:var(--cream)">
         <div style="padding:16px 28px 12px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gray2);background:var(--white)">
           <div>
             <div class="page-title">📌 Monthly Tracker</div>
@@ -563,14 +575,14 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       </div>
 
       <!-- ── TODOS ── -->
-      <div class="page" id="page-todos" style="display:none;flex-direction:column;height:calc(100vh - 64px);padding:0">
-        <div style="padding:16px 28px 12px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+      <div class="page" id="page-todos" style="display:none;flex-direction:column;position:fixed;top:64px;left:220px;right:0;bottom:0;z-index:1;background:var(--cream)">
+        <div style="padding:14px 24px 10px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;background:var(--white);border-bottom:1px solid var(--gray2)">
           <div>
             <div class="page-title">To-Do Lists</div>
             <div class="page-sub">Add tasks directly in each panel below</div>
           </div>
         </div>
-        <div class="todo-boards" id="todo-boards" style="flex:1;height:auto;margin:0;border-radius:0;border-left:none;border-right:none;border-bottom:none">
+        <div class="todo-boards" id="todo-boards" style="flex:1;height:0;margin:0;border-radius:0;border:none;border-top:none">
           <div class="loading"><div class="spinner"></div>Loading tasks...</div>
         </div>
       </div>
@@ -2061,23 +2073,72 @@ function populateMonthSelectors() {
 }
 
 async function loadBriefing() {
-  const month=document.getElementById('brief-month').value;
-  const grid=document.getElementById('brief-grid');
-  grid.innerHTML='<div class="loading"><div class="spinner"></div>Loading...</div>';
-  const snap=await getDocs(collection(db,'briefs'));
-  const briefs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(b=>b.month===month);
-  grid.innerHTML=allClients.map(c=>{
-    const b=briefs.find(x=>x.clientId===c.id)||{status:'Not Started'};
-    const cls={['Not Started']:'brief-not-started','In Progress':'brief-in-progress','Submitted':'brief-submitted'}[b.status];
-    return `<div class="brief-card" onclick="openBriefModal('${c.id}','${month}','${b.id||''}')">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-weight:700;font-size:15px">${c.name}</div>
-        <span class="brief-status ${cls}">${b.status}</span>
+  const month = document.getElementById('brief-month').value;
+  const grid = document.getElementById('brief-grid');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+  const snap = await getDocs(collection(db,'briefs'));
+  const briefs = snap.docs.map(d=>({id:d.id,...d.data()})).filter(b=>b.month===month);
+
+  grid.innerHTML = allClients.map(c=>{
+    const b = briefs.find(x=>x.clientId===c.id)||{};
+    const status = b.status||'Not Started';
+    const statusCls = {'Not Started':'brief-not-started','In Progress':'brief-in-progress','Submitted':'brief-submitted'}[status]||'brief-not-started';
+    const platforms = (c.platforms||[]).map(p=>`<span style="font-size:10px;background:var(--gray);padding:2px 8px;border-radius:50px;font-weight:600;color:var(--gray3)">${p}</span>`).join('');
+    return `<div class="brief-card">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:700;font-size:15px">${c.name}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${platforms}</div>
+        </div>
+        <select class="brief-status-select ${statusCls}" id="brief-status-${c.id}"
+          onchange="updateBriefStatus('${c.id}','${month}','${b.id||''}',this)">
+          <option value="Not Started" ${status==='Not Started'?'selected':''}>Not Started</option>
+          <option value="In Progress" ${status==='In Progress'?'selected':''}>In Progress</option>
+          <option value="Submitted" ${status==='Submitted'?'selected':''}>Submitted</option>
+        </select>
       </div>
-      <div style="font-size:12px;color:var(--gray3)">${b.agencyNotes?b.agencyNotes.substring(0,60)+'...':'No agency notes yet'}</div>
+      <div>
+        <div class="brief-section-label">📋 Agency Notes</div>
+        <textarea class="brief-textarea" id="brief-notes-${c.id}" 
+          placeholder="Add internal notes for this client..."
+          onblur="saveBriefInline('${c.id}','${month}','${b.id||''}')"
+          onkeydown="if(event.ctrlKey&&event.key==='Enter')saveBriefInline('${c.id}','${month}','${b.id||''}')"
+        >${b.agencyNotes||''}</textarea>
+      </div>
+      ${b.clientNotes ? `<div>
+        <div class="brief-section-label">💬 Client Notes</div>
+        <div class="brief-client-notes-box">${b.clientNotes}</div>
+      </div>` : ''}
     </div>`;
   }).join('');
 }
+
+window.updateBriefStatus = async (clientId, month, briefId, selectEl) => {
+  const status = selectEl.value;
+  // Update button colour
+  selectEl.className = 'brief-status-select ' + ({'Not Started':'brief-not-started','In Progress':'brief-in-progress','Submitted':'brief-submitted'}[status]||'brief-not-started');
+  await saveBriefInline(clientId, month, briefId);
+};
+
+window.saveBriefInline = async (clientId, month, briefId) => {
+  const notesEl = document.getElementById('brief-notes-'+clientId);
+  const statusEl = document.getElementById('brief-status-'+clientId);
+  if(!notesEl || !statusEl) return;
+  const data = {
+    clientId, month,
+    agencyNotes: notesEl.value.trim(),
+    status: statusEl.value,
+    updatedAt: new Date().toISOString()
+  };
+  if(briefId) {
+    await updateDoc(doc(db,'briefs',briefId), data);
+  } else {
+    const newDoc = await addDoc(collection(db,'briefs'),{...data, createdAt:new Date().toISOString()});
+    // Update briefId in the DOM for subsequent saves
+    notesEl.setAttribute('onblur', `saveBriefInline('${clientId}','${month}','${newDoc.id}')`);
+    statusEl.setAttribute('onchange', `updateBriefStatus('${clientId}','${month}','${newDoc.id}',this)`);
+  }
+};
 
 window.openBriefModal = async (clientId, month, briefId='') => {
   editingBriefId = briefId||null;
@@ -2357,7 +2418,7 @@ window.showPage = (page) => {
   // Calendar uses flex layout to fill full height
   const fullPageModes = ['calendar', 'todos', 'tracker'];
   pageEl.style.display = fullPageModes.includes(page) ? 'flex' : 'block';
-  // Remove padding for full-page views
+  // Full-page views are position:fixed so main padding stays normal
   document.querySelector('.main').style.padding = fullPageModes.includes(page) ? '0' : '28px';
   document.querySelectorAll('.nav-item').forEach(n=>{
     if(n.textContent.toLowerCase().includes(page.replace('-',' '))) n.classList.add('active');
