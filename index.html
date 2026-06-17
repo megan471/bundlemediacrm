@@ -3755,96 +3755,106 @@ function initGoogleAuth(resolve, reject) {
 async function fetchDocWithImages(docId) {
   if(!googleAccessToken) await signInWithGoogle();
 
-  const exportUrl = `https://www.googleapis.com/drive/v3/files/${docId}/export?mimeType=application/zip`;
-  let res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${googleAccessToken}` } });
-  if(!res.ok) {
-    await signInWithGoogle();
-    res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${googleAccessToken}` } });
-    if(!res.ok) throw new Error('Could not export Doc. Make sure it is shared with your Google account.');
+  // Step 1: Get doc structure via Docs API JSON
+  const docRes = await fetch(
+    'https://docs.googleapis.com/v1/documents/' + docId,
+    { headers: { Authorization: 'Bearer ' + googleAccessToken } }
+  );
+  if(!docRes.ok) throw new Error('Could not read Doc via API. Check credentials in Settings.');
+  const doc = await docRes.json();
+
+  // Step 2: Get images as base64 via zip export
+  const zipRes = await fetch(
+    'https://www.googleapis.com/drive/v3/files/' + docId + '/export?mimeType=application/zip',
+    { headers: { Authorization: 'Bearer ' + googleAccessToken } }
+  );
+  const imagesByRid = {};
+  if(zipRes.ok) {
+    const zip = await JSZip.loadAsync(await zipRes.arrayBuffer());
+    // Load relationship file to map rId -> image file
+    const relsFile = zip.file('word/_rels/document.xml.rels');
+    if(relsFile) {
+      const relsText = await relsFile.async('text');
+      // Parse each Relationship line
+      const relLines = relsText.match(/Relationship[^/]*/g) || [];
+      for(const rel of relLines) {
+        const idM = rel.match(/Id="([^"]+)"/);
+        const tgtM = rel.match(/Target="([^"]+)"/);
+        if(idM && tgtM) {
+          const imgPath = tgtM[1].replace('../', 'word/');
+          const imgFile = zip.file(imgPath);
+          if(imgFile) {
+            const blob = await imgFile.async('blob');
+            const ext = imgPath.split('.').pop().toLowerCase();
+            const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/' + ext;
+            imagesByRid[idM[1]] = await blobToBase64(new Blob([blob], {type: mime}));
+          }
+        }
+      }
+    }
   }
 
-  const arrayBuffer = await res.arrayBuffer();
-  const zip = await JSZip.loadAsync(arrayBuffer);
+  // Step 3: Walk doc JSON — it is a table with rows [imageCell, captionCell]
+  const pairedPosts = [];
+  const body = doc.body && doc.body.content ? doc.body.content : [];
+  const inlineObjects = doc.inlineObjects || {};
 
-  // Load all images into a lookup by filename
-  const imagesByName = {};
-  const imageFiles = Object.keys(zip.files).filter(f =>
-    f.match(/\.(png|jpg|jpeg|gif|webp)$/i) && !zip.files[f].dir
-  ).sort(); // sort so image1, image2... are in order
-
-  for(const imgPath of imageFiles) {
-    const imgBlob = await zip.files[imgPath].async('blob');
-    const ext = imgPath.split('.').pop().toLowerCase();
-    const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/' + ext;
-    const base64 = await blobToBase64(new Blob([imgBlob], {type: mimeType}));
-    const name = imgPath.split('/').pop(); // e.g. "image1.png"
-    imagesByName[name] = base64;
-  }
-
-  // Parse the Word XML to extract table rows — each row = {image, caption}
-  // The doc is a 2-column table: col1=image, col2=caption+hashtags
-  const docXmlFile = zip.file('word/document.xml');
-  let pairedPosts = []; // [{imageBase64, captionText}]
-
-  if(docXmlFile) {
-    const xml = await docXmlFile.async('string');
-
-    // Find all table rows <w:tr>
-    const rowMatches = xml.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g) || [];
-
-    for(const row of rowMatches) {
-      // Get cells <w:tc>
-      const cells = row.match(/<w:tc[ >][\s\S]*?<\/w:tc>/g) || [];
+  for(const el of body) {
+    if(!el.table) continue;
+    for(const row of el.table.tableRows || []) {
+      const cells = row.tableCells || [];
       if(cells.length < 2) continue;
 
-      const cell1 = cells[0]; // image cell
-      const cell2 = cells[1]; // caption cell
-
-      // Extract image reference from cell1 — look for r:embed or image filename
-      const imgRefMatch = cell1.match(/r:embed="([^"]+)"/);
+      // Cell 0 = image
+      const imgCell = cells[0];
       let imageBase64 = '';
-
-      if(imgRefMatch) {
-        // Look up the relationship to find the actual image filename
-        const rId = imgRefMatch[1];
-        // Try to find in relationships file
-        const relsFile = zip.file('word/_rels/document.xml.rels');
-        if(relsFile) {
-          const relsXml = await relsFile.async('string');
-          const relMatch = relsXml.match(new RegExp('Id="' + rId + '"[^>]*Target="([^"]+)"'));
-          if(relMatch) {
-            const imgPath = relMatch[1].replace('../', 'word/');
-            const imgFile = zip.file(imgPath);
-            if(imgFile) {
-              const imgBlob = await imgFile.async('blob');
-              const ext = imgPath.split('.').pop().toLowerCase();
-              const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/' + ext;
-              imageBase64 = await blobToBase64(new Blob([imgBlob], {type: mimeType}));
+      for(const c of imgCell.content || []) {
+        for(const pe of (c.paragraph && c.paragraph.elements) || []) {
+          if(pe.inlineObjectElement) {
+            const obj = inlineObjects[pe.inlineObjectElement.inlineObjectId];
+            const embeddedProps = obj && obj.inlineObjectProperties && obj.inlineObjectProperties.embeddedObject;
+            // Try to get rId from the embedded object to look up in zip
+            if(embeddedProps) {
+              // The imageProperties.sourceUri or contentUri won't work directly
+              // But we can match by position — images are added to zip in doc order
+              // Use the object ID index as fallback
             }
           }
         }
       }
 
-      // Extract text from cell2 — strip XML tags
-      const captionText = cell2
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/<[^>]+>/g, '')
-        .trim();
+      // Cell 1 = caption text
+      let captionText = '';
+      for(const c of cells[1].content || []) {
+        if(c.paragraph) {
+          for(const pe of c.paragraph.elements || []) {
+            if(pe.textRun) captionText += pe.textRun.content;
+          }
+          captionText += '
+';
+        }
+      }
 
-      if(captionText && captionText.length > 5) {
-        pairedPosts.push({ imageBase64, captionText });
+      if(captionText.trim().length > 5) {
+        pairedPosts.push({ imageBase64, captionText: captionText.trim() });
       }
     }
   }
 
-  // Also get plain text as fallback
+  // Step 4: Now assign images in order — zip images come out in doc order
+  const imageKeys = Object.values(imagesByRid);
+  pairedPosts.forEach((p, i) => {
+    if(!p.imageBase64 && imageKeys[i]) p.imageBase64 = imageKeys[i];
+  });
+
+  // Step 5: Plain text fallback for text parser
   const txtRes = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${docId}/export?mimeType=text/plain`,
-    { headers: { Authorization: `Bearer ${googleAccessToken}` } }
+    'https://www.googleapis.com/drive/v3/files/' + docId + '/export?mimeType=text/plain',
+    { headers: { Authorization: 'Bearer ' + googleAccessToken } }
   );
   const textContent = txtRes.ok ? await txtRes.text() : '';
 
-  return { textContent, pairedPosts, imagesByName };
+  return { textContent, pairedPosts, imagesByRid };
 }
 
 // Extract plain text + inline images from Docs API response
