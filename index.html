@@ -2852,9 +2852,13 @@ window.fetchBulkDoc = async () => {
       status.textContent = '🔑 Signing in to Google to read images...';
       try {
         const docData = await fetchDocWithImages(docId);
-        status.textContent = '🖼️ Extracting text and images...';
-        const { textContent, images } = docData;
-        parsedBulkPosts = parseBulkDocWithImages(textContent, images, clientId);
+        status.textContent = '🖼️ Extracting posts and images...';
+        const { textContent, pairedPosts, imagesByName } = docData;
+        if(pairedPosts && pairedPosts.length > 0) {
+          parsedBulkPosts = parsePairedPosts(pairedPosts, clientId);
+        } else {
+          parsedBulkPosts = parseBulkDocWithImages(textContent, imagesByName || {}, clientId);
+        }
         console.log('Used Google Docs API — images included');
       } catch(apiErr) {
         // Fall back to text export if API fails
@@ -3749,14 +3753,11 @@ function initGoogleAuth(resolve, reject) {
 
 // ── FETCH DOC WITH IMAGES via Google Docs API ──
 async function fetchDocWithImages(docId) {
-  // Export the doc as a zip file — this contains the text AND all images as actual files
   if(!googleAccessToken) await signInWithGoogle();
 
   const exportUrl = `https://www.googleapis.com/drive/v3/files/${docId}/export?mimeType=application/zip`;
   let res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${googleAccessToken}` } });
-
   if(!res.ok) {
-    // Token expired — refresh and retry
     await signInWithGoogle();
     res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${googleAccessToken}` } });
     if(!res.ok) throw new Error('Could not export Doc. Make sure it is shared with your Google account.');
@@ -3765,38 +3766,89 @@ async function fetchDocWithImages(docId) {
   const arrayBuffer = await res.arrayBuffer();
   const zip = await JSZip.loadAsync(arrayBuffer);
 
-  // Extract text content
-  let textContent = '';
-  const textFile = zip.file('word/document.xml') || zip.file(/\.xml$/)[0];
-  if(textFile) {
-    const xml = await textFile.async('string');
-    // Strip XML tags to get plain text
-    textContent = xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  }
-
-  // Alternatively try the plain text export for cleaner text
-  const txtRes = await fetch(`https://www.googleapis.com/drive/v3/files/${docId}/export?mimeType=text/plain`,
-    { headers: { Authorization: `Bearer ${googleAccessToken}` } });
-  if(txtRes.ok) textContent = await txtRes.text();
-
-  // Extract images from the zip
-  const images = {};
-  let imgIndex = 0;
+  // Load all images into a lookup by filename
+  const imagesByName = {};
   const imageFiles = Object.keys(zip.files).filter(f =>
     f.match(/\.(png|jpg|jpeg|gif|webp)$/i) && !zip.files[f].dir
-  );
+  ).sort(); // sort so image1, image2... are in order
 
   for(const imgPath of imageFiles) {
     const imgBlob = await zip.files[imgPath].async('blob');
     const ext = imgPath.split('.').pop().toLowerCase();
-    const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' :
-                     ext === 'png' ? 'image/png' : 'image/' + ext;
+    const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/' + ext;
     const base64 = await blobToBase64(new Blob([imgBlob], {type: mimeType}));
-    images[imgIndex] = { path: imgPath, base64 };
-    imgIndex++;
+    const name = imgPath.split('/').pop(); // e.g. "image1.png"
+    imagesByName[name] = base64;
   }
 
-  return { textContent, images };
+  // Parse the Word XML to extract table rows — each row = {image, caption}
+  // The doc is a 2-column table: col1=image, col2=caption+hashtags
+  const docXmlFile = zip.file('word/document.xml');
+  let pairedPosts = []; // [{imageBase64, captionText}]
+
+  if(docXmlFile) {
+    const xml = await docXmlFile.async('string');
+
+    // Find all table rows <w:tr>
+    const rowMatches = xml.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g) || [];
+
+    for(const row of rowMatches) {
+      // Get cells <w:tc>
+      const cells = row.match(/<w:tc[ >][\s\S]*?<\/w:tc>/g) || [];
+      if(cells.length < 2) continue;
+
+      const cell1 = cells[0]; // image cell
+      const cell2 = cells[1]; // caption cell
+
+      // Extract image reference from cell1 — look for r:embed or image filename
+      const imgRefMatch = cell1.match(/r:embed="([^"]+)"/);
+      let imageBase64 = '';
+
+      if(imgRefMatch) {
+        // Look up the relationship to find the actual image filename
+        const rId = imgRefMatch[1];
+        // Try to find in relationships file
+        const relsFile = zip.file('word/_rels/document.xml.rels');
+        if(relsFile) {
+          const relsXml = await relsFile.async('string');
+          const relMatch = relsXml.match(new RegExp('Id="' + rId + '"[^>]*Target="([^"]+)"'));
+          if(relMatch) {
+            const imgPath = relMatch[1].replace('../', 'word/');
+            const imgFile = zip.file(imgPath);
+            if(imgFile) {
+              const imgBlob = await imgFile.async('blob');
+              const ext = imgPath.split('.').pop().toLowerCase();
+              const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/' + ext;
+              imageBase64 = await blobToBase64(new Blob([imgBlob], {type: mimeType}));
+            }
+          }
+        }
+      }
+
+      // Extract text from cell2 — strip XML tags
+      const captionText = cell2
+        .replace(/<w:br[^/]*/\/>/g, '\n') // line breaks
+        .replace(/<w:p[ >][^]*?<\/w:p>/g, match => {
+          const text = match.replace(/<[^>]+>/g, '').trim();
+          return text ? text + '\n' : '\n';
+        })
+        .replace(/<[^>]+>/g, '')
+        .trim();
+
+      if(captionText && captionText.length > 5) {
+        pairedPosts.push({ imageBase64, captionText });
+      }
+    }
+  }
+
+  // Also get plain text as fallback
+  const txtRes = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${docId}/export?mimeType=text/plain`,
+    { headers: { Authorization: `Bearer ${googleAccessToken}` } }
+  );
+  const textContent = txtRes.ok ? await txtRes.text() : '';
+
+  return { textContent, pairedPosts, imagesByName };
 }
 
 // Extract plain text + inline images from Docs API response
@@ -3860,6 +3912,55 @@ function blobToBase64(blob) {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+}
+
+// Parse table-paired posts (image + caption matched from table structure)
+function parsePairedPosts(pairedPosts, clientId) {
+  const client = allClients.find(c=>c.id===clientId);
+  const platforms = getSelectedPlatforms();
+  const defaultType = document.getElementById('bulk-type')?.value || 'Single';
+  const months = {january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+  const datePattern = /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i;
+
+  const posts = [];
+
+  for(const pair of pairedPosts) {
+    const lines = pair.captionText.split('
+').map(l => l.replace(/[_*]/g,'').trim()).filter(Boolean);
+    let foundDate = null, dateDisplay = '', captionLines = [], hashtagLines = [], currentType = defaultType;
+    let inHashtags = false;
+
+    for(const line of lines) {
+      const dateMatch = line.match(datePattern);
+      if(dateMatch && line.length < 25) {
+        foundDate = `${dateMatch[3]}-${String(months[dateMatch[2].toLowerCase()]).padStart(2,'0')}-${dateMatch[1].padStart(2,'0')}`;
+        dateDisplay = line;
+      } else if(line.startsWith('#') || inHashtags) {
+        inHashtags = true;
+        hashtagLines.push(line);
+      } else if(['reel','carousel','single','story'].includes(line.toLowerCase())) {
+        const t = line.toLowerCase();
+        currentType = t === 'reel' ? 'Reel' : t === 'carousel' ? 'Carousel' : t === 'story' ? 'Story' : 'Single';
+      } else {
+        captionLines.push(line);
+      }
+    }
+
+    if(foundDate && (captionLines.length || hashtagLines.length)) {
+      posts.push({
+        clientId, clientName: client?.name||'',
+        platforms, type: currentType,
+        date: foundDate, dateDisplay,
+        caption: captionLines.join('
+').trim(),
+        hashtags: hashtagLines.join(' ').trim(),
+        asset: pair.imageBase64 || '',
+        status: 'Draft', comments: [],
+        createdAt: new Date().toISOString()
+      });
+    }
+  }
+  return posts;
 }
 
 // Parse text + image map into posts — images assigned in order they appear
