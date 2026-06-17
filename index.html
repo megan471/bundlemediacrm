@@ -742,6 +742,97 @@ input,textarea,select{font-family:'Poppins',sans-serif}
           </div>
           <button class="btn btn-pink" onclick="saveCalUrl()">Save</button>
         </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">🔑 Google API Key <span style="font-size:13px;font-weight:400;color:var(--gray3)">(for Doc image extraction)</span></div>
+          <p style="font-size:13px;color:var(--gray3);margin-bottom:16px;line-height:1.7">
+            Allows the CRM to read images directly from your Google Docs. 
+            <a href="#" onclick="showGoogleSetupGuide();return false" style="color:var(--blue)">View setup guide →</a>
+          </p>
+          <div class="form-group">
+            <label>Google API Key</label>
+            <input type="password" id="google-api-key" placeholder="AIzaSy..." style="max-width:500px">
+          </div>
+          <div class="form-group">
+            <label>Google Client ID</label>
+            <input type="text" id="google-client-id" placeholder="XXXXXXX.apps.googleusercontent.com" style="max-width:500px">
+          </div>
+          <div id="google-api-status" style="font-size:13px;margin-bottom:12px;display:none"></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-blue" onclick="saveGoogleApiKey()">Save API Credentials</button>
+            <button class="btn btn-outline" onclick="testGoogleApi()">Test Connection</button>
+          </div>
+        </div>
+
+        <div class="modal-overlay" id="google-setup-guide" style="z-index:2000">
+          <div class="modal" style="max-width:640px;max-height:85vh;overflow-y:auto">
+            <div class="modal-header">
+              <div class="modal-title">🔑 Google API Setup Guide</div>
+              <button class="modal-close" onclick="closeModal('google-setup-guide')">×</button>
+            </div>
+            <div class="modal-body" style="line-height:1.8;font-size:13px">
+              <div style="background:var(--blue-light);border-radius:10px;padding:16px;margin-bottom:20px">
+                <strong>This lets Bundle Media CRM read images directly from your Google Docs. Takes about 15 minutes.</strong>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div style="background:var(--gray);border-radius:10px;padding:16px">
+                  <div style="font-weight:700;margin-bottom:8px">Step 1 — Create a Google Cloud Project</div>
+                  <ol style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px">
+                    <li>Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--blue)">console.cloud.google.com</a></li>
+                    <li>Click <strong>New Project</strong> → name it <strong>Bundle Media CRM</strong> → Create</li>
+                    <li>Make sure the new project is selected in the top dropdown</li>
+                  </ol>
+                </div>
+                <div style="background:var(--gray);border-radius:10px;padding:16px">
+                  <div style="font-weight:700;margin-bottom:8px">Step 2 — Enable the APIs</div>
+                  <ol style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px">
+                    <li>In the left menu go to <strong>APIs & Services → Library</strong></li>
+                    <li>Search for <strong>Google Docs API</strong> → click it → Enable</li>
+                    <li>Search for <strong>Google Drive API</strong> → click it → Enable</li>
+                  </ol>
+                </div>
+                <div style="background:var(--gray);border-radius:10px;padding:16px">
+                  <div style="font-weight:700;margin-bottom:8px">Step 3 — Create an API Key</div>
+                  <ol style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px">
+                    <li>Go to <strong>APIs & Services → Credentials</strong></li>
+                    <li>Click <strong>+ Create Credentials → API Key</strong></li>
+                    <li>Copy the key and paste it above</li>
+                    <li>Click <strong>Edit API Key</strong> → under API restrictions select <strong>Google Docs API</strong> and <strong>Google Drive API</strong></li>
+                    <li>Under Application restrictions → select <strong>HTTP referrers</strong> → add <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">megan471.github.io/*</code></li>
+                  </ol>
+                </div>
+                <div style="background:var(--gray);border-radius:10px;padding:16px">
+                  <div style="font-weight:700;margin-bottom:8px">Step 4 — Create OAuth Client ID</div>
+                  <ol style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px">
+                    <li>Go to <strong>APIs & Services → Credentials → + Create Credentials → OAuth Client ID</strong></li>
+                    <li>Application type: <strong>Web application</strong></li>
+                    <li>Name: <strong>Bundle Media CRM</strong></li>
+                    <li>Under <strong>Authorised JavaScript origins</strong> add: <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">https://megan471.github.io</code></li>
+                    <li>Click Create → copy the <strong>Client ID</strong> and paste it above</li>
+                  </ol>
+                </div>
+                <div style="background:var(--gray);border-radius:10px;padding:16px">
+                  <div style="font-weight:700;margin-bottom:8px">Step 5 — Configure OAuth Consent Screen</div>
+                  <ol style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px">
+                    <li>Go to <strong>APIs & Services → OAuth Consent Screen</strong></li>
+                    <li>User type: <strong>External</strong> → Create</li>
+                    <li>App name: <strong>Bundle Media CRM</strong>, support email: your email</li>
+                    <li>Under Scopes → Add: <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">.../auth/documents.readonly</code> and <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">.../auth/drive.readonly</code></li>
+                    <li>Under Test users → add <strong>megan@bundlemedia.africa</strong> and <strong>stacey@bundlemedia.africa</strong></li>
+                    <li>Save and continue</li>
+                  </ol>
+                </div>
+                <div style="background:#e8f5e9;border-radius:10px;padding:16px;border:2px solid #a5d6a7">
+                  <div style="font-weight:700;margin-bottom:6px;color:#2e7d32">✅ Once done</div>
+                  <p style="margin:0">Paste your API Key and Client ID in Settings and click <strong>Test Connection</strong>. When it says Connected, your Docs will be fully readable including images.</p>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-pink" onclick="closeModal('google-setup-guide')">Got it</button>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /main -->
@@ -1997,7 +2088,7 @@ async function loadKanban() {
         <div id="client-section-${cid}" style="padding:16px;display:flex;flex-wrap:wrap;gap:12px">
           ${cPosts.map(p=>`
             <div class="post-card" style="width:220px;flex-shrink:0" onclick="openPostModal('${p.id}')">
-              ${p.asset ? `<img src="${p.asset}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px" onerror="this.style.display='none'">` : ''}
+              ${p.asset ? `<img src="${toDirectImageUrl(p.asset)}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px" onerror="this.style.display='none'">` : ''}
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
                 <span class="post-type type-${(p.type||'single').toLowerCase()}">${p.type||'Single'}</span>
                 <span style="font-size:11px;color:var(--gray3)">${p.platform||''}</span>
@@ -2011,24 +2102,52 @@ async function loadKanban() {
       </div>`;
     }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>No content yet. Add some posts!</p></div>';
   } else {
-    // Status columns (original view)
+    // Status columns — posts grouped by client within each column
     board.style.flexDirection = 'row';
     board.style.flexWrap = 'nowrap';
     board.innerHTML = KANBAN_COLS.map(col=>{
       const colPosts = posts.filter(p=>p.status===col).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+      // Group by client
+      const clientIds = [...new Set(colPosts.map(p=>p.clientId).filter(Boolean))];
+      const ungrouped = colPosts.filter(p=>!p.clientId);
       return `<div class="kanban-col">
         <div class="kanban-col-title">${colTitle(col)} <span class="kanban-col-count">${colPosts.length}</span></div>
-        ${colPosts.map(p=>`
-          <div class="post-card" onclick="openPostModal('${p.id}')">
-            <div class="post-card-top">
-              <span class="post-client">${p.clientName||''}</span>
-              <span class="post-platform">${p.platform||''}</span>
+        ${clientIds.map(cid=>{
+          const client = allClients.find(c=>c.id===cid);
+          const color = client?.color||'#DD0B82';
+          const logo = getClientLogo(client?.name||'');
+          const cPosts = colPosts.filter(p=>p.clientId===cid);
+          return `<div style="margin-bottom:14px;border-radius:10px;overflow:hidden;border:2px solid ${color}20">
+            <!-- Client mini-header -->
+            <div style="background:${color};padding:7px 10px;display:flex;align-items:center;gap:8px">
+              ${logo ? `<img src="${logo}" style="width:32px;height:22px;object-fit:contain;background:rgba(255,255,255,0.9);border-radius:4px;padding:1px">` : `<div style="width:24px;height:24px;border-radius:5px;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff">${(client?.name||'?')[0]}</div>`}
+              <span style="font-weight:700;font-size:12px;color:#fff;flex:1">${client?.name||cid}</span>
+              <span style="font-size:10px;color:rgba(255,255,255,0.8)">${cPosts.length} post${cPosts.length!==1?'s':''}</span>
             </div>
-            ${p.asset ? `<img src="${p.asset}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin:4px 0" onerror="this.style.display='none'">` : ''}
+            <!-- Posts -->
+            <div style="padding:8px;background:var(--white)">
+              ${cPosts.map(p=>`
+                <div class="post-card" style="margin-bottom:8px" onclick="openPostModal('${p.id}')">
+                  ${p.asset ? `<img src="${toDirectImageUrl(p.asset)}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:6px" onerror="this.style.display='none'">` : ''}
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                    <span class="post-type type-${(p.type||'single').toLowerCase()}">${p.type||'Single'}</span>
+                    <span style="font-size:11px;color:var(--gray3)">${p.platform||''}</span>
+                  </div>
+                  <div class="post-date">${p.date?formatDate(p.date):''}</div>
+                  ${p.caption?`<div class="post-caption">${p.caption}</div>`:''}
+                </div>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+        ${ungrouped.map(p=>`
+          <div class="post-card" onclick="openPostModal('${p.id}')">
+            <div class="post-card-top"><span class="post-client">${p.clientName||''}</span><span class="post-platform">${p.platform||''}</span></div>
+            ${p.asset ? `<img src="${toDirectImageUrl(p.asset)}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin:4px 0" onerror="this.style.display='none'">` : ''}
             <span class="post-type type-${(p.type||'single').toLowerCase()}">${p.type||'Single'}</span>
-            <div class="post-date">${p.date?formatDate(p.date):''} ${p.time||''}</div>
+            <div class="post-date">${p.date?formatDate(p.date):''}</div>
             ${p.caption?`<div class="post-caption">${p.caption}</div>`:''}
           </div>`).join('')}
+        ${!colPosts.length ? '<div style="color:var(--gray3);font-size:12px;text-align:center;padding:20px 0">Empty</div>' : ''}
       </div>`;
     }).join('');
   }
@@ -2721,20 +2840,35 @@ window.fetchBulkDoc = async () => {
   status.style.display = 'block';
   status.style.background = 'var(--blue-light)';
   status.style.color = 'var(--blue)';
-  status.textContent = '⏳ Reading document...';
 
-  // Extract doc ID
   const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
   if(!match) { status.textContent = '❌ Could not find Doc ID in URL'; status.style.background='#ffebee'; status.style.color='#c62828'; return; }
-
   const docId = match[1];
-  const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
 
   try {
-    const res = await fetch(exportUrl);
-    if(!res.ok) throw new Error('Could not read doc — make sure it is set to "Anyone with link can view"');
-    const text = await res.text();
-    parsedBulkPosts = parseBulkDoc(text, clientId);
+    // ── USE GOOGLE DOCS API IF CREDENTIALS ARE SET (gets images) ──
+    if(googleApiKey && googleClientId) {
+      status.textContent = '🔑 Signing in to Google to read images...';
+      try {
+        const docData = await fetchDocWithImages(docId);
+        const elements = extractDocContent(docData);
+        parsedBulkPosts = parseDocContentWithImages(elements, clientId);
+        console.log('Used Google Docs API — images included');
+      } catch(apiErr) {
+        // Fall back to text export if API fails
+        console.warn('Docs API failed, falling back to text:', apiErr.message);
+        status.textContent = '⚠️ Could not read via API, falling back to text (no images)...';
+        const res = await fetch(`https://docs.google.com/document/d/${docId}/export?format=txt`);
+        if(!res.ok) throw new Error('Could not read doc');
+        parsedBulkPosts = parseBulkDoc(await res.text(), clientId);
+      }
+    } else {
+      // ── TEXT EXPORT (no images) ──
+      status.textContent = '⏳ Reading document (text only — add Google API in Settings for images)...';
+      const res = await fetch(`https://docs.google.com/document/d/${docId}/export?format=txt`);
+      if(!res.ok) throw new Error('Could not read doc — make sure it is set to "Anyone with link can view"');
+      parsedBulkPosts = parseBulkDoc(await res.text(), clientId);
+    }
 
     if(!parsedBulkPosts.length) {
       status.textContent = '⚠️ No posts found. Make sure each post starts with a date like "2 July 2026".';
@@ -3378,7 +3512,7 @@ window.showPage = (page) => {
   if(page==='todos') loadTodos();
   if(page==='briefing') loadBriefing();
   if(page==='reports') { loadReports(); checkMetaStatus(); }
-  if(page==='settings') { loadPinList(); }
+  if(page==='settings') { loadPinList(); loadGoogleApiSettings(); }
   if(page==='crmsolutions') loadCrmBoards();
   if(page==='adhoc') loadAdhocBoards();
   if(page==='tracker') loadTracker();
@@ -3513,6 +3647,212 @@ window.pullMetaAnalytics = async () => {
   loadReports();
 };
 
+// ── GOOGLE API ──
+let googleApiKey = '';
+let googleClientId = '';
+let googleAccessToken = '';
+let gapiLoaded = false;
+
+async function loadGoogleApiSettings() {
+  const snap = await getDocs(collection(db,'settings'));
+  snap.docs.forEach(d => {
+    if(d.id === 'googleApi') {
+      const data = d.data();
+      googleApiKey = data.apiKey || '';
+      googleClientId = data.clientId || '';
+      const keyEl = document.getElementById('google-api-key');
+      const cidEl = document.getElementById('google-client-id');
+      if(keyEl) keyEl.value = googleApiKey;
+      if(cidEl) cidEl.value = googleClientId;
+      if(googleApiKey && googleClientId) {
+        updateGoogleStatus('✅ Credentials saved — click Test Connection to verify', '#2e7d32', '#e8f5e9');
+      }
+    }
+  });
+}
+
+window.saveGoogleApiKey = async () => {
+  const key = document.getElementById('google-api-key').value.trim();
+  const cid = document.getElementById('google-client-id').value.trim();
+  if(!key || !cid) { showToast('Please enter both API Key and Client ID', 'error'); return; }
+  await setDoc(doc(db,'settings','googleApi'), { apiKey: key, clientId: cid, updatedAt: new Date().toISOString() });
+  googleApiKey = key;
+  googleClientId = cid;
+  showToast('Google API credentials saved!');
+  updateGoogleStatus('✅ Credentials saved — click Test Connection to verify', '#2e7d32', '#e8f5e9');
+};
+
+function updateGoogleStatus(msg, color, bg) {
+  const el = document.getElementById('google-api-status');
+  if(el) { el.style.display='block'; el.style.color=color; el.style.background=bg; el.style.padding='10px 14px'; el.style.borderRadius='8px'; el.textContent=msg; }
+}
+
+window.showGoogleSetupGuide = () => openModal('google-setup-guide');
+
+window.testGoogleApi = async () => {
+  if(!googleApiKey || !googleClientId) {
+    showToast('Please save API credentials first', 'error'); return;
+  }
+  updateGoogleStatus('⏳ Testing connection...', 'var(--blue)', 'var(--blue-light)');
+  try {
+    await signInWithGoogle();
+    updateGoogleStatus('✅ Connected! Google Docs API is working. Images will now pull directly from your Docs.', '#2e7d32', '#e8f5e9');
+    showToast('Google API connected!');
+  } catch(e) {
+    updateGoogleStatus('❌ ' + e.message, '#c62828', '#ffebee');
+  }
+};
+
+async function signInWithGoogle() {
+  return new Promise((resolve, reject) => {
+    if(!googleClientId) { reject(new Error('No Client ID saved')); return; }
+    // Load GIS (Google Identity Services)
+    if(!document.getElementById('gis-script')) {
+      const script = document.createElement('script');
+      script.id = 'gis-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      document.head.appendChild(script);
+      script.onload = () => initGoogleAuth(resolve, reject);
+    } else {
+      initGoogleAuth(resolve, reject);
+    }
+  });
+}
+
+function initGoogleAuth(resolve, reject) {
+  try {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: googleClientId,
+      scope: 'https://www.googleapis.com/auth/documents.readonly https://www.googleapis.com/auth/drive.readonly',
+      callback: (response) => {
+        if(response.error) { reject(new Error(response.error)); return; }
+        googleAccessToken = response.access_token;
+        resolve(response.access_token);
+      }
+    });
+    client.requestAccessToken();
+  } catch(e) { reject(e); }
+}
+
+// ── FETCH DOC WITH IMAGES via Google Docs API ──
+async function fetchDocWithImages(docId) {
+  // Ensure we have a valid token
+  if(!googleAccessToken) {
+    await signInWithGoogle();
+  }
+  // Fetch the doc JSON from Docs API
+  const res = await fetch(
+    `https://docs.googleapis.com/v1/documents/${docId}`,
+    { headers: { Authorization: `Bearer ${googleAccessToken}` } }
+  );
+  if(!res.ok) {
+    // Token may have expired — try refreshing
+    await signInWithGoogle();
+    const res2 = await fetch(
+      `https://docs.googleapis.com/v1/documents/${docId}`,
+      { headers: { Authorization: `Bearer ${googleAccessToken}` } }
+    );
+    if(!res2.ok) throw new Error('Could not read Doc. Make sure it is shared and you are signed in with the right account.');
+    return res2.json();
+  }
+  return res.json();
+}
+
+// Extract plain text + inline images from Docs API response
+function extractDocContent(docData) {
+  const body = docData.body?.content || [];
+  const inlineObjects = docData.inlineObjects || {};
+  const result = []; // array of {type: 'text'|'image', value, imageId}
+
+  for(const element of body) {
+    if(!element.paragraph) continue;
+    for(const el of element.paragraph.elements || []) {
+      if(el.textRun) {
+        const text = el.textRun.content;
+        if(text && text.trim()) result.push({ type: 'text', value: text.replace(/\n$/, '') });
+      }
+      if(el.inlineObjectElement) {
+        const objId = el.inlineObjectElement.inlineObjectId;
+        const obj = inlineObjects[objId];
+        const imgProps = obj?.inlineObjectProperties?.embeddedObject?.imageProperties;
+        const contentUri = imgProps?.contentUri || obj?.inlineObjectProperties?.embeddedObject?.imageUri;
+        if(contentUri) result.push({ type: 'image', value: contentUri, imageId: objId });
+      }
+    }
+  }
+  return result;
+}
+
+// Parse the structured content into posts with images
+function parseDocContentWithImages(elements, clientId) {
+  const client = allClients.find(c=>c.id===clientId);
+  const platforms = getSelectedPlatforms();
+  const defaultType = document.getElementById('bulk-type').value || 'Single';
+  const months = {january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+  const datePattern = /^(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i;
+
+  const posts = [];
+  let currentDate = null, currentDateDisplay = '', captionLines = [], hashtagLines = [];
+  let currentType = defaultType, imageUrl = '', inHashtags = false;
+  let lastImageUri = ''; // track most recent image seen
+
+  const savePost = () => {
+    if(!currentDate) return;
+    const caption = captionLines.join('\n').trim();
+    const hashtags = hashtagLines.join(' ').trim();
+    if(caption || hashtags) {
+      posts.push({
+        clientId, clientName: client?.name||'', platforms, type: currentType,
+        date: currentDate, dateDisplay: currentDateDisplay,
+        caption, hashtags, asset: imageUrl || lastImageUri,
+        status: 'Draft', comments: [], createdAt: new Date().toISOString()
+      });
+    }
+  };
+
+  for(const el of elements) {
+    if(el.type === 'image') {
+      // Image that appears before or within a post block
+      if(currentDate) {
+        imageUrl = el.value; // assign to current post
+      } else {
+        lastImageUri = el.value; // might belong to next post
+      }
+    } else if(el.type === 'text') {
+      const line = el.value.trim();
+      if(!line) continue;
+      const dateMatch = line.match(datePattern);
+      if(dateMatch) {
+        savePost();
+        const day = dateMatch[1].padStart(2,'0');
+        const month = String(months[dateMatch[2].toLowerCase()]).padStart(2,'0');
+        const year = dateMatch[3];
+        currentDate = `${year}-${month}-${day}`;
+        currentDateDisplay = line;
+        captionLines = []; hashtagLines = [];
+        // Carry over the last image seen (it was above the date = belongs to this post)
+        imageUrl = lastImageUri; lastImageUri = '';
+        currentType = defaultType; inHashtags = false;
+      } else if(currentDate) {
+        const typeLower = line.toLowerCase();
+        if(['reel','carousel','single','story'].some(t=>typeLower===t)) {
+          if(typeLower==='reel') currentType='Reel';
+          else if(typeLower==='carousel') currentType='Carousel';
+          else if(typeLower==='story') currentType='Story';
+          else currentType='Single';
+        } else if(line.startsWith('#') || inHashtags) {
+          inHashtags = true;
+          hashtagLines.push(line);
+        } else {
+          captionLines.push(line);
+        }
+      }
+    }
+  }
+  savePost();
+  return posts;
+}
+
 // ── SETTINGS ──
 window.changeTeamPassword = async (email, inputId, name) => {
   const newPass = document.getElementById(inputId)?.value.trim();
@@ -3546,6 +3886,18 @@ window.saveCalUrl = async () => {
 };
 
 // ── UTIL ──
+function toDirectImageUrl(url) {
+  if(!url) return '';
+  // Google Drive: https://drive.google.com/file/d/FILE_ID/view
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if(driveMatch) return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+  // Google Drive open: https://drive.google.com/open?id=FILE_ID
+  const driveOpen = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if(driveOpen) return `https://drive.google.com/uc?export=view&id=${driveOpen[1]}`;
+  // Already a direct URL — return as-is
+  return url;
+}
+
 function formatDate(str) {
   if(!str) return '';
   const d=new Date(str+'T00:00:00');
