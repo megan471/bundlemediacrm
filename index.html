@@ -177,22 +177,37 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .post-caption{font-size:12px;color:var(--text);margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 
 /* ── TODOS ── */
-.todo-boards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.todo-board{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
-.todo-board-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-.todo-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover}
-.todo-board-name{font-size:15px;font-weight:700}
-.todo-item{padding:12px;border-radius:8px;margin-bottom:8px;border:1px solid var(--gray2);cursor:pointer;transition:all .2s}
-.todo-item:hover{border-color:var(--pink);background:var(--pink-light)}
-.todo-item.done{opacity:.5;text-decoration:line-through}
-.todo-item.overdue{border-color:#e53935;background:#ffebee}
-.todo-text{font-size:13px;font-weight:500}
-.todo-meta{display:flex;gap:8px;align-items:center;margin-top:6px}
-.priority-chip{padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700}
-.priority-high{background:#ffebee;color:#c62828}
-.priority-medium{background:#fff8e1;color:#f57f17}
-.priority-low{background:#e8f5e9;color:#2e7d32}
-.todo-due{font-size:11px;color:var(--gray3)}
+.todo-boards{display:grid;grid-template-columns:repeat(3,1fr);gap:0;height:calc(100vh - 170px);border:1px solid var(--gray2);border-radius:var(--radius);overflow:hidden}
+.todo-board{background:var(--white);display:flex;flex-direction:column;border-right:1px solid var(--gray2)}
+.todo-board:last-child{border-right:none}
+.todo-board-header{padding:20px 20px 8px;flex-shrink:0}
+.todo-board-dot{width:10px;height:10px;border-radius:50%;margin-bottom:10px}
+.todo-board-name{font-size:26px;font-weight:800;color:var(--text);margin-bottom:2px}
+.todo-board-count{font-size:13px;color:var(--gray3);margin-bottom:4px}
+.todo-list-scroll{flex:1;overflow-y:auto;padding:4px 20px 12px}
+.todo-item{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--gray2)}
+.todo-item:last-child{border-bottom:none}
+.todo-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--gray3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:var(--white);font-size:12px}
+.todo-check:hover{border-color:var(--pink)}
+.todo-check.checked{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.todo-item-body{flex:1}
+.todo-text{font-size:14px;font-weight:500;color:var(--text);line-height:1.4}
+.todo-text.done{text-decoration:line-through;color:var(--gray3)}
+.todo-priority-label{font-size:11px;font-weight:700;margin-top:3px}
+.priority-high-label{color:#c62828}
+.priority-med-label{color:#e65100}
+.priority-low-label{color:#2e7d32}
+.todo-board-footer{padding:12px 16px;border-top:2px solid var(--gray2);background:var(--white);flex-shrink:0}
+.todo-add-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.todo-add-input{flex:1;border:none;outline:none;font-size:14px;font-family:"Poppins",sans-serif;color:var(--text);background:transparent;padding:4px 0}
+.todo-add-input::placeholder{color:var(--gray3)}
+.todo-add-btn{width:32px;height:32px;border-radius:8px;border:none;background:var(--pink);color:#fff;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s}
+.todo-add-btn:hover{background:#c4076e}
+.todo-priority-row{display:flex;gap:6px}
+.priority-toggle{padding:4px 12px;border-radius:6px;border:1.5px solid var(--gray2);font-size:11px;font-weight:700;cursor:pointer;background:var(--white);color:var(--gray3);transition:all .2s}
+.priority-toggle.active-high{background:#c62828;color:#fff;border-color:#c62828}
+.priority-toggle.active-med{background:#e65100;color:#fff;border-color:#e65100}
+.priority-toggle.active-low{background:#2e7d32;color:#fff;border-color:#2e7d32}
 
 /* ── REPORTS ── */
 .reports-list{display:flex;flex-direction:column;gap:12px}
@@ -261,6 +276,51 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .month-selector{display:flex;align-items:center;gap:12px}
 .month-selector select{padding:8px 14px;border:2px solid var(--gray2);border-radius:8px;font-size:14px;font-weight:600;outline:none}
 .month-selector select:focus{border-color:var(--pink)}
+
+/* ── MONTHLY TRACKER ── */
+.tracker-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);font-size:13px}
+.tracker-table th{background:var(--black);color:var(--white);padding:12px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.tracker-table th.center{text-align:center}
+.tracker-table td{padding:11px 14px;border-bottom:1px solid var(--gray2);vertical-align:middle}
+.tracker-table tr:last-child td{border-bottom:none}
+.tracker-table tr:hover td{background:var(--gray)}
+.tracker-client-name{font-weight:600;font-size:14px}
+.tracker-platforms{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.tracker-platform-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.tracker-check-cell{text-align:center}
+.tracker-checkbox{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;background:var(--white);font-size:13px;flex-shrink:0}
+.tracker-checkbox:hover{border-color:var(--pink)}
+.tracker-checkbox.done{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.tracker-checkbox.manual{background:#e65100;border-color:#e65100;color:#fff}
+.tracker-checkbox.na{background:var(--gray2);border-color:var(--gray2);color:var(--gray3)}
+.tracker-legend{display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray3)}
+.legend-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--gray2);display:inline-flex;align-items:center;justify-content:center;font-size:9px}
+.legend-done{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.legend-manual{background:#e65100;border-color:#e65100;color:#fff}
+.legend-pending{background:var(--white);border-color:var(--gray2)}
+.tracker-progress{height:4px;background:var(--gray2);border-radius:2px;margin-top:4px;overflow:hidden}
+.tracker-progress-bar{height:100%;background:var(--pink);border-radius:2px;transition:width .3s}
+.tracker-stats{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tracker-stat-pill{padding:6px 14px;border-radius:50px;font-size:12px;font-weight:700;background:var(--white);border:2px solid var(--gray2)}
+.tracker-stat-pill span{color:var(--pink)}
+.tracker-notes-input{border:none;outline:none;font-size:12px;font-family:"Poppins",sans-serif;color:var(--gray3);background:transparent;width:100%;min-width:80px}
+.tracker-notes-input::placeholder{color:var(--gray2)}
+.tracker-notes-input:focus{color:var(--text)}
+
+/* ── CRM SOLUTIONS ── */
+/* ── CRM SOLUTIONS ── */
+.crm-col-systems .todo-board-dot{background:#DD0B82}
+.crm-col-potential .todo-board-dot{background:#3496D3}
+.crm-col-inprogress .todo-board-dot{background:#F7B731}
+.crm-item-delete{opacity:0;font-size:14px;color:var(--gray3);cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .2s;flex-shrink:0;border:none;background:transparent}
+.todo-item:hover .crm-item-delete{opacity:1}
+.crm-item-delete:hover{background:#ffebee;color:#c62828}
+
+/* ── ADD PIN MODAL ── */
+.pin-row-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--gray);border-radius:10px;gap:10px}
+.pin-actions{display:flex;align-items:center;gap:8px}
+.pin-username{font-size:12px;color:var(--blue);font-weight:500}
 
 /* ── LOADING ── */
 .loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--gray3);font-size:14px}
@@ -359,11 +419,13 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       <div class="nav-item" onclick="showPage('calendar')"><span class="nav-icon">📅</span> Calendar</div>
       <div class="nav-section">Work</div>
       <div class="nav-item" onclick="showPage('content')"><span class="nav-icon">📋</span> Content Board</div>
+      <div class="nav-item" onclick="showPage('tracker')"><span class="nav-icon">📌</span> Monthly Tracker</div>
       <div class="nav-item" onclick="showPage('briefing')"><span class="nav-icon">📝</span> Briefing</div>
       <div class="nav-item" onclick="showPage('todos')"><span class="nav-icon">✅</span> To-Do Lists</div>
       <div class="nav-section">Reporting</div>
       <div class="nav-item" onclick="showPage('reports')"><span class="nav-icon">📊</span> Reports</div>
       <div class="nav-section" id="settings-nav-section">Admin</div>
+      <div class="nav-item" id="crm-nav" onclick="showPage('crmsolutions')"><span class="nav-icon">💼</span> CRM Digital Solutions</div>
       <div class="nav-item" id="settings-nav" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Settings</div>
     </div>
 
@@ -474,6 +536,22 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         </div>
       </div>
 
+      <!-- ── MONTHLY TRACKER ── -->
+      <div class="page" id="page-tracker">
+        <div class="page-actions">
+          <div>
+            <div class="page-title">📌 Monthly Tracker</div>
+            <div class="page-sub" id="tracker-sub">Content status for all clients this month</div>
+          </div>
+          <div class="month-selector">
+            <select id="tracker-month" onchange="loadTracker()"></select>
+          </div>
+        </div>
+        <div id="tracker-table-wrap">
+          <div class="loading"><div class="spinner"></div>Loading tracker...</div>
+        </div>
+      </div>
+
       <!-- ── BRIEFING ── -->
       <div class="page" id="page-briefing">
         <div class="page-actions">
@@ -489,9 +567,9 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 
       <!-- ── TODOS ── -->
       <div class="page" id="page-todos">
-        <div class="page-actions">
+        <div class="page-header" style="margin-bottom:16px">
           <div class="page-title">To-Do Lists</div>
-          <button class="add-btn" onclick="openTodoModal()">+ Add Task</button>
+          <div class="page-sub">Add tasks directly in each panel below</div>
         </div>
         <div class="todo-boards" id="todo-boards">
           <div class="loading"><div class="spinner"></div>Loading tasks...</div>
@@ -513,6 +591,17 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       </div>
 
       <!-- ── SETTINGS ── -->
+      <!-- ── CRM DIGITAL SOLUTIONS ── -->
+      <div class="page" id="page-crmsolutions">
+        <div class="page-header" style="margin-bottom:16px">
+          <div class="page-title">💼 CRM Digital Solutions</div>
+          <div class="page-sub">Track your systems, pipeline and active builds</div>
+        </div>
+        <div class="todo-boards" id="crm-boards" style="grid-template-columns:repeat(3,1fr)">
+          <div class="loading"><div class="spinner"></div>Loading...</div>
+        </div>
+      </div>
+
       <div class="page" id="page-settings">
         <div class="page-header">
           <div class="page-title">Settings</div>
@@ -544,7 +633,10 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         </div>
 
         <div class="settings-section" id="pin-management" style="display:none">
-          <div class="settings-section-title">🔐 Client PIN Management <span style="font-size:13px;font-weight:400;color:var(--gray3)">(Admin only)</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--gray2)">
+            <div class="settings-section-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none">🔐 Client Portal Access <span style="font-size:13px;font-weight:400;color:var(--gray3)">(Admin only)</span></div>
+            <button class="add-btn" onclick="openAddPinModal()">+ Add Client Login</button>
+          </div>
           <div class="pin-list" id="pin-list">Loading...</div>
         </div>
 
@@ -864,6 +956,42 @@ input,textarea,select{font-family:'Poppins',sans-serif}
   </div>
 </div>
 
+<!-- Add Pin Modal -->
+<div class="modal-overlay" id="add-pin-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">Add Client Login</div>
+      <button class="modal-close" onclick="closeModal('add-pin-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--gray3);margin-bottom:16px">Create a username and 4-digit PIN for a client to access their portal.</p>
+      <div class="form-group">
+        <label>Select Client *</label>
+        <select id="new-pin-client">
+          <option value="">Choose client...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Username *</label>
+        <input type="text" id="new-pin-username" placeholder="e.g. arbourcafe" style="text-transform:lowercase">
+      </div>
+      <div class="form-group">
+        <label>4-Digit PIN *</label>
+        <div class="pin-row" style="justify-content:flex-start;gap:10px">
+          <input class="pin-input" type="text" maxlength="1" inputmode="numeric" id="np1" oninput="pinNext(this,'np2')" style="width:56px;height:56px">
+          <input class="pin-input" type="text" maxlength="1" inputmode="numeric" id="np2" oninput="pinNext(this,'np3')" onkeydown="pinBack(event,this,'np1')" style="width:56px;height:56px">
+          <input class="pin-input" type="text" maxlength="1" inputmode="numeric" id="np3" oninput="pinNext(this,'np4')" onkeydown="pinBack(event,this,'np2')" style="width:56px;height:56px">
+          <input class="pin-input" type="text" maxlength="1" inputmode="numeric" id="np4" oninput="pinNext(this,null)" onkeydown="pinBack(event,this,'np3')" style="width:56px;height:56px">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('add-pin-modal')">Cancel</button>
+      <button class="btn btn-pink" onclick="saveNewPin()">Add Login</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1006,11 +1134,12 @@ async function startAgencyApp() {
   // Casey restrictions
   if(currentUser.role === 'content') {
     document.getElementById('settings-nav').style.display = 'none';
+    document.getElementById('crm-nav').style.display = 'none';
     document.getElementById('settings-nav-section').style.display = 'none';
     document.querySelectorAll('.nav-item').forEach(n => {
       const txt = n.textContent.trim();
       if(['Dashboard','Content Board','To-Do Lists','Briefing'].some(x=>txt.includes(x))) n.style.display='flex';
-      else if(txt.includes('Settings')) n.style.display='none';
+      else if(txt.includes('Settings')||txt.includes('CRM Digital')) n.style.display='none';
     });
   }
 
@@ -1154,25 +1283,65 @@ function populateClientSelects() {
 async function loadPinList() {
   const snap = await getDocs(collection(db,'clientPins'));
   const list = document.getElementById('pin-list');
-  list.innerHTML = allClients.map(c=>{
-    const pin = snap.docs.find(d=>d.data().clientId===c.id);
-    return `<div class="pin-row-item">
-      <div class="pin-client-name">${c.name}</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="pin-value">${pin?pin.data().pin:'—'}</div>
-        <button class="btn btn-outline" style="padding:6px 12px;font-size:12px" onclick="setPinFor('${c.id}','${c.name}')">Set PIN</button>
+  // Show all clients that have a PIN set
+  const pinned = snap.docs.map(d=>({docId:d.id,...d.data()}));
+  // Also show clients without a PIN as "not set"
+  const allWithStatus = allClients.map(c=>{
+    const p = pinned.find(x=>x.clientId===c.id);
+    return {client:c, pinDoc:p};
+  });
+  list.innerHTML = allWithStatus.map(({client:c, pinDoc:p})=>`
+    <div class="pin-row-item">
+      <div>
+        <div class="pin-client-name">${c.name}</div>
+        ${p?`<div class="pin-username">@${p.username}</div>`:''}
       </div>
-    </div>`;
-  }).join('');
+      <div class="pin-actions">
+        <div class="pin-value">${p?p.pin.split('').map(()=>'●').join(' '):'Not set'}</div>
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="setPinFor('${c.id}','${c.name}')">Edit</button>
+        ${p?`<button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePinFor('${c.id}','${c.name}')">Remove</button>`:''}
+      </div>
+    </div>`).join('');
 }
 
+window.openAddPinModal = () => {
+  const sel = document.getElementById('new-pin-client');
+  sel.innerHTML = '<option value="">Choose client...</option>' + allClients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('new-pin-username').value = '';
+  ['np1','np2','np3','np4'].forEach(id=>document.getElementById(id).value='');
+  openModal('add-pin-modal');
+};
+
+window.saveNewPin = async () => {
+  const clientId = document.getElementById('new-pin-client').value;
+  const username = document.getElementById('new-pin-username').value.trim().toLowerCase();
+  const pin = ['np1','np2','np3','np4'].map(id=>document.getElementById(id).value).join('');
+  if(!clientId){showToast('Please select a client','error');return;}
+  if(!username){showToast('Please enter a username','error');return;}
+  if(!/^\d{4}$/.test(pin)){showToast('PIN must be exactly 4 digits','error');return;}
+  const client = allClients.find(c=>c.id===clientId);
+  await setDoc(doc(db,'clientPins',clientId),{clientId, clientName:client?.name||'', username, pin});
+  showToast(`Login added for ${client?.name}`);
+  closeModal('add-pin-modal');
+  loadPinList();
+};
+
 window.setPinFor = async (clientId, clientName) => {
-  const pin = prompt(`Set 4-digit PIN for ${clientName}:`);
+  const pin = prompt(`New 4-digit PIN for ${clientName}:`);
   if(!pin || !/^\d{4}$/.test(pin)) { showToast('PIN must be exactly 4 digits','error'); return; }
   const client = allClients.find(c=>c.id===clientId);
   const username = client?.username || clientId;
-  await setDoc(doc(db,'clientPins',clientId), { clientId, clientName, username, pin });
-  showToast(`PIN set for ${clientName}`);
+  const existing = await getDoc(doc(db,'clientPins',clientId));
+  const existingUsername = existing.exists() ? existing.data().username : username;
+  await setDoc(doc(db,'clientPins',clientId),{clientId, clientName, username:existingUsername, pin});
+  showToast(`PIN updated for ${clientName}`);
+  loadPinList();
+};
+
+window.deletePinFor = async (clientId, clientName) => {
+  if(!confirm(`Remove portal access for ${clientName}?`)) return;
+  await deleteDoc(doc(db,'clientPins',clientId));
+  showToast(`Access removed for ${clientName}`);
   loadPinList();
 };
 
@@ -1494,38 +1663,88 @@ window.deletePost = async () => {
 };
 
 // ── TODOS ──
+const BOARD_COLORS = { Megan:'#DD0B82', Stacey:'#3496D3', Casey:'#F7B731' };
+
+// Per-board selected priority state
+const boardPriority = { Megan:'High', Stacey:'High', Casey:'High' };
+
 async function loadTodos() {
   const snap = await getDocs(collection(db,'todos'));
   const todos = snap.docs.map(d=>({id:d.id,...d.data()}));
   const members = currentUser.role==='content' ? ['Casey'] : ['Megan','Stacey','Casey'];
   const boards = document.getElementById('todo-boards');
   boards.innerHTML = members.map(m=>{
-    const mtodos = todos.filter(t=>t.assignee===m).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
+    const mtodos = todos.filter(t=>t.assignee===m);
+    const open = mtodos.filter(t=>!t.done);
+    const done = mtodos.filter(t=>t.done);
+    // open tasks: newest first; done tasks at bottom
+    const sorted = [...open.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')),
+                    ...done.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))];
+    const color = BOARD_COLORS[m]||'#DD0B82';
+    const pri = boardPriority[m]||'High';
     return `<div class="todo-board">
       <div class="todo-board-header">
-        <img class="todo-avatar" src="${PHOTOS[m]}" alt="${m}">
-        <div class="todo-board-name">${m} <span class="badge">${mtodos.filter(t=>!t.done).length}</span></div>
+        <div class="todo-board-dot" style="background:${color}"></div>
+        <div class="todo-board-name">${m}</div>
+        <div class="todo-board-count">${done.length}/${mtodos.length} done</div>
       </div>
-      ${mtodos.length ? mtodos.map(t=>`
-        <div class="todo-item${t.done?' done':''}${isOverdue(t.dueDate)&&!t.done?' overdue':''}" onclick="openTodoModal('${t.id}')">
-          <div style="display:flex;align-items:center;gap:8px">
-            <input type="checkbox" ${t.done?'checked':''} onclick="toggleTodo(event,'${t.id}',${!t.done})">
-            <div class="todo-text">${t.text}</div>
-          </div>
-          <div class="todo-meta">
-            <span class="priority-chip priority-${(t.priority||'medium').toLowerCase()}">${t.priority||'Medium'}</span>
-            ${t.dueDate?`<span class="todo-due">Due ${formatDate(t.dueDate)}</span>`:''}
-            ${t.clientId?`<span style="font-size:11px;color:var(--blue)">${allClients.find(c=>c.id===t.clientId)?.name||''}</span>`:''}
-          </div>
-        </div>`).join('') : '<div style="padding:12px;color:var(--gray3);font-size:13px">No tasks assigned.</div>'}
+      <div class="todo-list-scroll" id="scroll-${m}">
+        ${sorted.length ? sorted.map(t=>`
+          <div class="todo-item">
+            <div class="todo-check${t.done?' checked':''}" onclick="toggleTodo('${t.id}',${!t.done},'${m}')">${t.done?'✓':''}</div>
+            <div class="todo-item-body">
+              <div class="todo-text${t.done?' done':''}">${t.text}</div>
+              <div class="todo-priority-label priority-${(t.priority||'High').toLowerCase().replace('medium','med')}-label">${(t.priority||'High').toUpperCase()}</div>
+            </div>
+          </div>`).join('') : '<div style="padding:20px 0;color:var(--gray3);font-size:13px">No tasks yet.</div>'}
+      </div>
+      <div class="todo-board-footer">
+        <div class="todo-add-row">
+          <input class="todo-add-input" id="add-input-${m}" type="text" placeholder="Add a task..." 
+            onkeydown="if(event.key==='Enter')quickAddTodo('${m}')">
+          <button class="todo-add-btn" onclick="quickAddTodo('${m}')">+</button>
+        </div>
+        <div class="todo-priority-row">
+          <button class="priority-toggle${pri==='High'?' active-high':''}" onclick="setBoardPriority('${m}','High',this)">HIGH</button>
+          <button class="priority-toggle${pri==='Medium'?' active-med':''}" onclick="setBoardPriority('${m}','Medium',this)">MED</button>
+          <button class="priority-toggle${pri==='Low'?' active-low':''}" onclick="setBoardPriority('${m}','Low',this)">LOW</button>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
 
-window.toggleTodo = async (e, id, done) => {
-  e.stopPropagation();
-  await updateDoc(doc(db,'todos',id),{done});
+window.setBoardPriority = (member, priority, btn) => {
+  boardPriority[member] = priority;
+  const footer = btn.closest('.todo-board-footer');
+  footer.querySelectorAll('.priority-toggle').forEach(b=>{
+    b.className = 'priority-toggle';
+  });
+  btn.className = `priority-toggle active-${priority==='High'?'high':priority==='Medium'?'med':'low'}`;
+};
+
+window.quickAddTodo = async (member) => {
+  const input = document.getElementById('add-input-'+member);
+  const text = input.value.trim();
+  if(!text) return;
+  const data = {
+    text,
+    assignee: member,
+    priority: boardPriority[member]||'High',
+    done: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  await addDoc(collection(db,'todos'), data);
+  input.value = '';
   loadTodos();
+  loadDashboard();
+};
+
+window.toggleTodo = async (id, done, member) => {
+  await updateDoc(doc(db,'todos',id),{done, updatedAt:new Date().toISOString()});
+  loadTodos();
+  loadDashboard();
 };
 
 window.openTodoModal = async (id=null) => {
@@ -1534,7 +1753,7 @@ window.openTodoModal = async (id=null) => {
   document.getElementById('todo-delete-btn').style.display=id?'block':'none';
   ['text','due'].forEach(f=>document.getElementById('todo-'+f).value='');
   document.getElementById('todo-assignee').value='Megan';
-  document.getElementById('todo-priority').value='Medium';
+  document.getElementById('todo-priority').value='High';
   document.getElementById('todo-client').value='';
   if(id){
     const snap=await getDoc(doc(db,'todos',id));
@@ -1542,7 +1761,7 @@ window.openTodoModal = async (id=null) => {
       const t=snap.data();
       document.getElementById('todo-text').value=t.text||'';
       document.getElementById('todo-assignee').value=t.assignee||'Megan';
-      document.getElementById('todo-priority').value=t.priority||'Medium';
+      document.getElementById('todo-priority').value=t.priority||'High';
       document.getElementById('todo-due').value=t.dueDate||'';
       document.getElementById('todo-client').value=t.clientId||'';
     }
@@ -1569,6 +1788,240 @@ window.deleteTodo = async () => {
   loadTodos();
 };
 
+// ── MONTHLY TRACKER ──
+async function loadTracker() {
+  const month = document.getElementById('tracker-month').value;
+  const wrap = document.getElementById('tracker-table-wrap');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+  // Load all tracker docs for this month
+  const snap = await getDocs(query(collection(db,'tracker'), where('month','==',month)));
+  const trackerData = {};
+  snap.docs.forEach(d => { trackerData[d.data().clientId] = {docId:d.id, ...d.data()}; });
+
+  const platformColors = {
+    Instagram:'#c2185b', Facebook:'#1565c0', LinkedIn:'#2e7d32',
+    TikTok:'#6a1b9a', YouTube:'#e65100'
+  };
+
+  // Stats
+  let totalDesignDone=0, totalScheduledDone=0, totalManual=0;
+  allClients.forEach(c => {
+    const t = trackerData[c.id] || {};
+    if(t.designDone) totalDesignDone++;
+    if(t.scheduledDone) totalScheduledDone++;
+    if(t.manualPost) totalManual++;
+  });
+
+  const statsHtml = `<div class="tracker-stats">
+    <div class="tracker-stat-pill">Designs done: <span>${totalDesignDone}/${allClients.length}</span></div>
+    <div class="tracker-stat-pill">Scheduling done: <span>${totalScheduledDone}/${allClients.length}</span></div>
+    <div class="tracker-stat-pill">Manual post: <span style="color:#e65100">${totalManual}</span></div>
+    <div class="tracker-stat-pill">Outstanding: <span>${allClients.length - totalScheduledDone - totalManual}</span></div>
+  </div>`;
+
+  const legendHtml = `<div class="tracker-legend">
+    <div class="legend-item"><div class="legend-dot legend-done">✓</div> Done</div>
+    <div class="legend-item"><div class="legend-dot legend-manual">M</div> Manual post required</div>
+    <div class="legend-item"><div class="legend-dot legend-pending"></div> Outstanding</div>
+  </div>`;
+
+  const rows = allClients.map(c => {
+    const t = trackerData[c.id] || {};
+    const platforms = (c.platforms||[]).map(p =>
+      `<span class="tracker-platform-dot" style="background:${platformColors[p]||'#999'}" title="${p}"></span>`
+    ).join('');
+
+    // Progress bar — count how many of the 3 main steps are done
+    const steps = [t.designDone, t.scheduledDone||t.manualPost].filter(Boolean).length;
+    const pct = Math.round((steps / 2) * 100);
+
+    return `<tr>
+      <td style="min-width:180px">
+        <div class="tracker-client-name">${c.name}</div>
+        <div class="tracker-platforms">${platforms}</div>
+        <div class="tracker-progress"><div class="tracker-progress-bar" style="width:${pct}%"></div></div>
+      </td>
+      <td class="tracker-check-cell">
+        <div class="tracker-checkbox${t.designDone?' done':''}"
+          onclick="cycleTrackerField('${c.id}','${month}','designDone',${!!t.designDone})">
+          ${t.designDone?'✓':''}
+        </div>
+      </td>
+      <td class="tracker-check-cell">
+        <div class="tracker-checkbox${t.captionsDone?' done':''}"
+          onclick="cycleTrackerField('${c.id}','${month}','captionsDone',${!!t.captionsDone})">
+          ${t.captionsDone?'✓':''}
+        </div>
+      </td>
+      <td class="tracker-check-cell">
+        <div class="tracker-checkbox${t.scheduledDone?' done':t.manualPost?' manual':''}"
+          title="${t.manualPost?'Manual post required':t.scheduledDone?'Scheduled':'Not done yet'}"
+          onclick="cycleScheduled('${c.id}','${month}',${!!t.scheduledDone},${!!t.manualPost})">
+          ${t.scheduledDone?'✓':t.manualPost?'M':''}
+        </div>
+      </td>
+      <td class="tracker-check-cell">
+        <div class="tracker-checkbox${t.assetsUploaded?' done':''}"
+          onclick="cycleTrackerField('${c.id}','${month}','assetsUploaded',${!!t.assetsUploaded})">
+          ${t.assetsUploaded?'✓':''}
+        </div>
+      </td>
+      <td class="tracker-check-cell">
+        <div class="tracker-checkbox${t.reportDone?' done':''}"
+          onclick="cycleTrackerField('${c.id}','${month}','reportDone',${!!t.reportDone})">
+          ${t.reportDone?'✓':''}
+        </div>
+      </td>
+      <td>
+        <input class="tracker-notes-input" type="text" placeholder="Notes..."
+          value="${(t.notes||'').replace(/"/g,'&quot;')}"
+          onblur="saveTrackerNote('${c.id}','${month}',this.value)"
+          onkeydown="if(event.key==='Enter')this.blur()">
+      </td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = statsHtml + legendHtml + `
+    <div style="overflow-x:auto">
+    <table class="tracker-table">
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th class="center">🎨 Designs</th>
+          <th class="center">✍️ Captions</th>
+          <th class="center">📅 Scheduled</th>
+          <th class="center">📁 Assets</th>
+          <th class="center">📊 Report</th>
+          <th>📝 Notes</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>`;
+}
+
+window.cycleTrackerField = async (clientId, month, field, currentVal) => {
+  const newVal = !currentVal;
+  const snap = await getDocs(query(collection(db,'tracker'),
+    where('clientId','==',clientId), where('month','==',month)));
+  if(snap.empty) {
+    await addDoc(collection(db,'tracker'),{clientId, month, [field]:newVal, createdAt:new Date().toISOString()});
+  } else {
+    await updateDoc(doc(db,'tracker',snap.docs[0].id),{[field]:newVal, updatedAt:new Date().toISOString()});
+  }
+  loadTracker();
+};
+
+window.cycleScheduled = async (clientId, month, scheduledDone, manualPost) => {
+  // Cycle: empty → scheduled done → manual → empty
+  let newScheduled = false, newManual = false;
+  if(!scheduledDone && !manualPost) { newScheduled = true; }
+  else if(scheduledDone) { newScheduled = false; newManual = true; }
+  else { newScheduled = false; newManual = false; }
+
+  const snap = await getDocs(query(collection(db,'tracker'),
+    where('clientId','==',clientId), where('month','==',month)));
+  if(snap.empty) {
+    await addDoc(collection(db,'tracker'),{clientId, month, scheduledDone:newScheduled, manualPost:newManual, createdAt:new Date().toISOString()});
+  } else {
+    await updateDoc(doc(db,'tracker',snap.docs[0].id),{scheduledDone:newScheduled, manualPost:newManual, updatedAt:new Date().toISOString()});
+  }
+  loadTracker();
+};
+
+window.saveTrackerNote = async (clientId, month, notes) => {
+  const snap = await getDocs(query(collection(db,'tracker'),
+    where('clientId','==',clientId), where('month','==',month)));
+  if(snap.empty) {
+    await addDoc(collection(db,'tracker'),{clientId, month, notes, createdAt:new Date().toISOString()});
+  } else {
+    await updateDoc(doc(db,'tracker',snap.docs[0].id),{notes, updatedAt:new Date().toISOString()});
+  }
+};
+
+// ── CRM DIGITAL SOLUTIONS ──
+const CRM_COLS = [
+  { id:'systems',    label:'Systems Built',    color:'#DD0B82', cls:'crm-col-systems' },
+  { id:'potential',  label:'Potential Clients', color:'#3496D3', cls:'crm-col-potential' },
+  { id:'inprogress', label:'In Progress',       color:'#F7B731', cls:'crm-col-inprogress' },
+];
+const crmPriority = { systems:'High', potential:'High', inprogress:'High' };
+
+async function loadCrmBoards() {
+  const snap = await getDocs(collection(db,'crmItems'));
+  const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const boards = document.getElementById('crm-boards');
+  boards.innerHTML = CRM_COLS.map(col=>{
+    const colItems = items.filter(x=>x.column===col.id);
+    const open = colItems.filter(x=>!x.done);
+    const done = colItems.filter(x=>x.done);
+    const sorted = [...open.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')),
+                    ...done.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))];
+    const pri = crmPriority[col.id]||'High';
+    return `<div class="todo-board ${col.cls}">
+      <div class="todo-board-header">
+        <div class="todo-board-dot" style="background:${col.color}"></div>
+        <div class="todo-board-name">${col.label}</div>
+        <div class="todo-board-count">${done.length}/${colItems.length} done</div>
+      </div>
+      <div class="todo-list-scroll">
+        ${sorted.length ? sorted.map(t=>`
+          <div class="todo-item">
+            <div class="todo-check${t.done?' checked':''}" onclick="toggleCrmItem('${t.id}',${!t.done},'${col.id}')">${t.done?'✓':''}</div>
+            <div class="todo-item-body" style="flex:1">
+              <div class="todo-text${t.done?' done':''}">${t.text}</div>
+              <div class="todo-priority-label priority-${(t.priority||'High').toLowerCase().replace('medium','med')}-label">${(t.priority||'High').toUpperCase()}</div>
+            </div>
+            <button class="crm-item-delete" onclick="deleteCrmItem('${t.id}','${col.id}')" title="Delete">✕</button>
+          </div>`).join('') : '<div style="padding:20px 0;color:var(--gray3);font-size:13px">Nothing here yet.</div>'}
+      </div>
+      <div class="todo-board-footer">
+        <div class="todo-add-row">
+          <input class="todo-add-input" id="crm-input-${col.id}" type="text" placeholder="Add an item..."
+            onkeydown="if(event.key==='Enter')quickAddCrm('${col.id}')">
+          <button class="todo-add-btn" onclick="quickAddCrm('${col.id}')">+</button>
+        </div>
+        <div class="todo-priority-row">
+          <button class="priority-toggle${pri==='High'?' active-high':''}" onclick="setCrmPriority('${col.id}','High',this)">HIGH</button>
+          <button class="priority-toggle${pri==='Medium'?' active-med':''}" onclick="setCrmPriority('${col.id}','Medium',this)">MED</button>
+          <button class="priority-toggle${pri==='Low'?' active-low':''}" onclick="setCrmPriority('${col.id}','Low',this)">LOW</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.setCrmPriority = (colId, priority, btn) => {
+  crmPriority[colId] = priority;
+  const footer = btn.closest('.todo-board-footer');
+  footer.querySelectorAll('.priority-toggle').forEach(b=>b.className='priority-toggle');
+  btn.className = `priority-toggle active-${priority==='High'?'high':priority==='Medium'?'med':'low'}`;
+};
+
+window.quickAddCrm = async (colId) => {
+  const input = document.getElementById('crm-input-'+colId);
+  const text = input.value.trim();
+  if(!text) return;
+  await addDoc(collection(db,'crmItems'),{
+    text, column:colId, priority:crmPriority[colId]||'High',
+    done:false, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()
+  });
+  input.value = '';
+  loadCrmBoards();
+};
+
+window.toggleCrmItem = async (id, done, colId) => {
+  await updateDoc(doc(db,'crmItems',id),{done, updatedAt:new Date().toISOString()});
+  loadCrmBoards();
+};
+
+window.deleteCrmItem = async (id, colId) => {
+  if(!confirm('Remove this item?')) return;
+  await deleteDoc(doc(db,'crmItems',id));
+  loadCrmBoards();
+};
+
 // ── BRIEFING ──
 function populateMonthSelectors() {
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -1580,7 +2033,7 @@ function populateMonthSelectors() {
     const label=`${months[d.getMonth()]} ${d.getFullYear()}`;
     options.push(`<option value="${val}"${i===0?' selected':''}>${label}</option>`);
   }
-  ['brief-month','report-month','p-brief-month'].forEach(id=>{
+  ['brief-month','report-month','p-brief-month','tracker-month'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.innerHTML=options.join('');
   });
 }
@@ -1882,7 +2335,9 @@ window.showPage = (page) => {
   if(page==='todos') loadTodos();
   if(page==='briefing') loadBriefing();
   if(page==='reports') loadReports();
-  if(page==='settings') loadPinList();
+  if(page==='settings') { loadPinList(); }
+  if(page==='crmsolutions') loadCrmBoards();
+  if(page==='tracker') loadTracker();
   if(page==='calendar') renderCalendar();
 };
 
@@ -1922,7 +2377,12 @@ function isOverdue(dateStr) {
 // ── SEED DEFAULT CLIENTS ──
 async function seedClientsIfEmpty() {
   const snap=await getDocs(collection(db,'clients'));
-  if(!snap.empty) return;
+  if(snap.size >= 17) return; // already seeded
+  // If clients are missing or incomplete, seed them
+  if(!snap.empty) {
+    // Delete existing incomplete set first
+    for(const d of snap.docs) await deleteDoc(doc(db,'clients',d.id));
+  }
   const defaults=[
     {name:'Arbour Cafe',platforms:['Facebook','Instagram'],color:'#8B6914'},
     {name:"SK's Swim School",platforms:['Facebook','Instagram'],color:'#0077B6'},
