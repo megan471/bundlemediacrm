@@ -3921,8 +3921,7 @@ function parsePairedPosts(pairedPosts, clientId) {
   const posts = [];
 
   for(const pair of pairedPosts) {
-    const lines = pair.captionText.split('
-').map(l => l.replace(/[_*]/g,'').trim()).filter(Boolean);
+    const lines = pair.captionText.split('\n').map(l => l.replace(/[_*]/g,'').trim()).filter(Boolean);
     let foundDate = null, dateDisplay = '', captionLines = [], hashtagLines = [], currentType = defaultType;
     let inHashtags = false;
 
@@ -3947,8 +3946,7 @@ function parsePairedPosts(pairedPosts, clientId) {
         clientId, clientName: client?.name||'',
         platforms, type: currentType,
         date: foundDate, dateDisplay,
-        caption: captionLines.join('
-').trim(),
+        caption: captionLines.join('\n').trim(),
         hashtags: hashtagLines.join(' ').trim(),
         asset: pair.imageBase64 || '',
         status: 'Draft', comments: [],
