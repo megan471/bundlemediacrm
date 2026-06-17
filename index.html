@@ -900,7 +900,9 @@ input,textarea,select{font-family:'Poppins',sans-serif}
     <div id="portal-pcontract" style="display:none">
       <div class="card">
         <div class="card-title">📄 Your Contract</div>
-        <div id="p-contract-content" style="font-size:14px;color:var(--gray3)">No contract uploaded yet. Please contact Bundle Media.</div>
+        <div id="p-contract-content">
+          <div style="font-size:14px;color:var(--gray3)">Loading...</div>
+        </div>
       </div>
     </div>
 
@@ -946,6 +948,18 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         <div class="form-group full"><label>Google Drive Link</label><input type="url" id="c-drive"></div>
         <div class="form-group full"><label>Portal Username</label><input type="text" id="c-username" placeholder="e.g. arbourcafe"></div>
         <div class="form-group full"><label>Internal Notes</label><textarea id="c-notes"></textarea></div>
+        <div class="form-group full">
+          <label>📄 Contract (PDF)</label>
+          <div id="contract-upload-area" style="border:2px dashed var(--gray2);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--gray)" onclick="document.getElementById('c-contract-file').click()">
+            <div id="contract-upload-label" style="font-size:13px;color:var(--gray3)">Click to upload PDF contract</div>
+            <input type="file" id="c-contract-file" accept=".pdf" style="display:none" onchange="previewContract(this)">
+          </div>
+          <div id="contract-existing" style="display:none;margin-top:8px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:13px;color:var(--gray3)" id="contract-existing-name"></span>
+            <a id="contract-existing-link" href="#" target="_blank" class="btn btn-outline" style="padding:4px 12px;font-size:12px">View</a>
+            <button onclick="removeContract()" class="btn btn-danger" style="padding:4px 12px;font-size:12px">Remove</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1589,8 +1603,13 @@ async function startAgencyApp() {
     document.getElementById('settings-nav-section').style.display = 'none';
     document.querySelectorAll('.nav-item').forEach(n => {
       const txt = n.textContent.trim();
-      if(['Dashboard','Content Board','To-Do Lists','Briefing'].some(x=>txt.includes(x))) n.style.display='flex';
-      else if(txt.includes('Settings')||txt.includes('CRM Digital')) n.style.display='none';
+      const allowed = ['Dashboard','Content Board','To-Do Lists','Briefing','Clients','Ad Hoc'];
+      if(allowed.some(x=>txt.includes(x))) n.style.display='flex';
+      else n.style.display='none';
+    });
+    // Hide Monthly Tracker nav specifically
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if(n.textContent.includes('Monthly Tracker')) n.style.display='none';
     });
   }
 
@@ -1637,23 +1656,31 @@ async function loadClients() {
 function renderClientsGrid(clients) {
   const grid = document.getElementById('clients-grid');
   if(!clients.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><p>No clients yet. Add your first client!</p></div>'; return; }
+  const isCasey = currentUser && currentUser.role === 'content';
   grid.innerHTML = clients.map(c=>`
-    <div class="client-card" onclick="openClientModal('${c.id}')">
+    <div class="client-card" onclick="${isCasey ? '' : `openClientModal('${c.id}')`}" style="${isCasey ? 'cursor:default' : ''}">
       <div class="client-card-top">
         ${getClientLogo(c.name)
           ? `<img src="${getClientLogo(c.name)}" style="width:48px;height:40px;object-fit:contain;border-radius:6px;background:#f9f9f7;padding:2px">`
           : `<div class="client-avatar" style="background:${c.color||'#DD0B82'}">${(c.name||'?')[0]}</div>`}
-        <div><div class="client-name">${c.name}</div><div class="client-since">${c.contact||''}</div></div>
+        <div>
+          <div class="client-name">${c.name}</div>
+          ${!isCasey ? `<div class="client-since">${c.contact||''}</div>` : ''}
+        </div>
       </div>
       <div class="platform-tags">
         ${(c.platforms||[]).map(p=>`<span class="platform-tag tag-${p.toLowerCase()}">${p}</span>`).join('')}
       </div>
       <div class="client-meta">
         <span>✏️ ${(c.singles||0)+(c.carousels||0)+(c.reels||0)} posts/mo</span>
-        <span>📖 ${c.stories||0} stories/mo</span>
+        <span>🎞️ ${c.reels||0} reels/mo</span>
+        <span>🎠 ${c.carousels||0} carousels/mo</span>
       </div>
     </div>
   `).join('');
+  // Hide Add Client button for Casey
+  const addBtn = document.querySelector('#page-clients .add-btn');
+  if(addBtn && isCasey) addBtn.style.display = 'none';
 }
 
 window.filterClients = () => {
@@ -1698,7 +1725,37 @@ window.openClientModal = async (id=null) => {
   } else {
     delete document.getElementById('client-modal').dataset.editId;
   }
+  // Contract
+  document.getElementById('c-contract-file').value = '';
+  document.getElementById('contract-upload-label').textContent = 'Click to upload PDF contract';
+  document.getElementById('contract-upload-area').style.borderColor = 'var(--gray2)';
+  const existingDiv = document.getElementById('contract-existing');
+  existingDiv.style.display = 'none';
+  if(id) {
+    const c = allClients.find(x=>x.id===id);
+    if(c && c.contractUrl) {
+      existingDiv.style.display = 'flex';
+      document.getElementById('contract-existing-name').textContent = c.contractName || 'Contract.pdf';
+      document.getElementById('contract-existing-link').href = c.contractUrl;
+    }
+  }
   openModal('client-modal');
+};
+
+window.previewContract = (input) => {
+  const file = input.files[0];
+  if(!file) return;
+  document.getElementById('contract-upload-label').textContent = '📄 ' + file.name + ' — ready to save';
+  document.getElementById('contract-upload-area').style.borderColor = 'var(--pink)';
+};
+
+window.removeContract = () => {
+  document.getElementById('c-contract-file').value = '';
+  document.getElementById('contract-upload-label').textContent = 'Click to upload PDF contract';
+  document.getElementById('contract-upload-area').style.borderColor = 'var(--gray2)';
+  document.getElementById('contract-existing').style.display = 'none';
+  // Mark for removal on save
+  document.getElementById('client-modal').dataset.removeContract = 'true';
 };
 
 window.saveClient = async () => {
@@ -1724,6 +1781,27 @@ window.saveClient = async () => {
     notes: document.getElementById('c-notes').value.trim(),
     updatedAt: new Date().toISOString()
   };
+  // Handle contract PDF
+  const contractFile = document.getElementById('c-contract-file').files[0];
+  const removeContract = document.getElementById('client-modal').dataset.removeContract === 'true';
+  delete document.getElementById('client-modal').dataset.removeContract;
+
+  if(contractFile) {
+    // Convert PDF to base64 and store in Firestore
+    showToast('Uploading contract...');
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result);
+      reader.onerror = rej;
+      reader.readAsDataURL(contractFile);
+    });
+    data.contractUrl = base64;
+    data.contractName = contractFile.name;
+  } else if(removeContract) {
+    data.contractUrl = '';
+    data.contractName = '';
+  }
+
   const editId = document.getElementById('client-modal').dataset.editId;
   if(editId) {
     await updateDoc(doc(db,'clients',editId), data);
@@ -3445,7 +3523,26 @@ window.portalPage = (page, btn) => {
   if(page==='pcontent') loadPortalContent();
   if(page==='pbrief') loadPortalBrief();
   if(page==='preport') loadPortalReports();
+  if(page==='pcontract') loadPortalContract();
 };
+
+async function loadPortalContract() {
+  const clientData = allClients.find(c=>c.id===currentClient.id);
+  // Load fresh from Firestore
+  const snap = await getDocs(collection(db,'clients'));
+  const client = snap.docs.map(d=>({id:d.id,...d.data()})).find(c=>c.id===currentClient.id);
+  const el = document.getElementById('p-contract-content');
+  if(client && client.contractUrl) {
+    el.innerHTML = `
+      <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:14px;font-weight:600">📄 ${client.contractName||'Contract.pdf'}</span>
+        <a href="${client.contractUrl}" download="${client.contractName||'contract.pdf'}" class="btn btn-pink" style="padding:8px 16px;font-size:13px">⬇ Download</a>
+      </div>
+      <iframe src="${client.contractUrl}" style="width:100%;height:600px;border:none;border-radius:10px;background:#f5f5f5"></iframe>`;
+  } else {
+    el.innerHTML = '<div style="font-size:14px;color:var(--gray3)">No contract uploaded yet. Please contact Bundle Media.</div>';
+  }
+}
 
 async function loadPortalContent() {
   const snap=await getDocs(query(collection(db,'posts'),where('clientId','==',currentClient.id)));
@@ -4109,18 +4206,13 @@ window.changeTeamPassword = async (email, inputId, name) => {
     return;
   }
   try {
-    // Sign in as that user temporarily to update their password
-    // Firebase Admin SDK is needed for true server-side reset
-    // Best approach: store a pending password reset in Firestore
-    // which the user picks up on next login
-    await setDoc(doc(db, 'passwordResets', email), {
-      email,
-      newPassword: newPass,
-      requestedBy: currentUser.name,
-      requestedAt: new Date().toISOString()
-    });
+    // Sign the target user in with their current password won't work without knowing it
+    // Best available approach from browser: send a password reset email via Firebase Auth
+    // Import sendPasswordResetEmail
+    const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    await sendPasswordResetEmail(auth, email);
     document.getElementById(inputId).value = '';
-    showToast(`Password reset queued for ${name} — they'll be updated on next login`);
+    showToast(`Password reset email sent to ${email} — ${name} must check their inbox and set the new password from the link`);
   } catch(e) {
     showToast('Error: ' + e.message, 'error');
   }
