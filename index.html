@@ -2851,7 +2851,8 @@ window.fetchBulkDoc = async () => {
       status.textContent = '🔑 Signing in to Google to read images...';
       try {
         const docData = await fetchDocWithImages(docId);
-        const elements = extractDocContent(docData);
+        status.textContent = '🖼️ Fetching images from document...';
+        const elements = await extractDocContent(docData);
         parsedBulkPosts = parseDocContentWithImages(elements, clientId);
         console.log('Used Google Docs API — images included');
       } catch(apiErr) {
@@ -2891,7 +2892,10 @@ window.fetchBulkDoc = async () => {
             ${(p.platforms||[]).map(pl=>`<span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3);font-weight:600">${pl}</span>`).join('')}
             <span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.type}</span>
           </div>
-          ${p.imageUrl ? `<div style="margin-bottom:8px"><img src="${p.imageUrl}" style="max-height:80px;border-radius:6px;object-fit:cover" onerror="this.style.display='none'"><span style="font-size:11px;color:var(--blue);margin-left:8px">🖼️ Image linked</span></div>` : ''}
+          ${(p.imageUrl||p.asset) ? `<div style="margin-bottom:8px">
+            <img src="${p.imageUrl||p.asset}" style="max-height:100px;border-radius:6px;object-fit:contain;background:#f5f5f5;width:100%" onerror="this.style.display='none'">
+            <span style="font-size:11px;color:var(--blue)">${(p.imageUrl||p.asset||'').startsWith('data:') ? '🖼️ Image extracted from Doc' : '🔗 Image linked'}</span>
+          </div>` : ''}
           <div style="font-size:12px;color:var(--text);margin-bottom:6px;max-height:60px;overflow:hidden">${p.caption.substring(0,150)}${p.caption.length>150?'...':''}</div>
           <div style="font-size:11px;color:var(--blue)">${p.hashtags.substring(0,80)}${p.hashtags.length>80?'...':''}</div>
         </div>`).join('');
@@ -3759,28 +3763,66 @@ async function fetchDocWithImages(docId) {
 }
 
 // Extract plain text + inline images from Docs API response
-function extractDocContent(docData) {
+async function extractDocContent(docData) {
   const body = docData.body?.content || [];
   const inlineObjects = docData.inlineObjects || {};
-  const result = []; // array of {type: 'text'|'image', value, imageId}
+  const result = [];
 
+  // First pass — collect all text and image object IDs in order
+  const rawItems = [];
   for(const element of body) {
     if(!element.paragraph) continue;
     for(const el of element.paragraph.elements || []) {
       if(el.textRun) {
         const text = el.textRun.content;
-        if(text && text.trim()) result.push({ type: 'text', value: text.replace(/\n$/, '') });
+        if(text && text.trim()) rawItems.push({ type: 'text', value: text.replace(/\n$/, '') });
       }
       if(el.inlineObjectElement) {
         const objId = el.inlineObjectElement.inlineObjectId;
         const obj = inlineObjects[objId];
-        const imgProps = obj?.inlineObjectProperties?.embeddedObject?.imageProperties;
-        const contentUri = imgProps?.contentUri || obj?.inlineObjectProperties?.embeddedObject?.imageUri;
-        if(contentUri) result.push({ type: 'image', value: contentUri, imageId: objId });
+        const embedded = obj?.inlineObjectProperties?.embeddedObject;
+        // Get source URI — this is what we can actually fetch with auth
+        const srcUri = embedded?.imageProperties?.sourceUri
+          || embedded?.imageProperties?.contentUri
+          || embedded?.imageUri || '';
+        rawItems.push({ type: 'image', objId, srcUri });
+      }
+    }
+  }
+
+  // Second pass — fetch each image as base64 using the auth token
+  for(const item of rawItems) {
+    if(item.type === 'text') {
+      result.push(item);
+    } else if(item.type === 'image' && item.srcUri) {
+      try {
+        // Fetch the image using our OAuth token
+        const imgRes = await fetch(item.srcUri, {
+          headers: { Authorization: `Bearer ${googleAccessToken}` }
+        });
+        if(imgRes.ok) {
+          const blob = await imgRes.blob();
+          const base64 = await blobToBase64(blob);
+          result.push({ type: 'image', value: base64, objId: item.objId });
+        } else {
+          // Try fetching via Drive API export if direct fetch fails
+          result.push({ type: 'image', value: item.srcUri, objId: item.objId });
+        }
+      } catch(e) {
+        console.warn('Could not fetch image:', e.message);
       }
     }
   }
   return result;
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 // Parse the structured content into posts with images
