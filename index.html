@@ -1671,7 +1671,6 @@ async function loadDashboard() {
     {name:'Stacey', date:'03-24', photo:'Stacey'},
     {name:'Casey', date:'03-27', photo:'Casey'},
   ];
-  const today = new Date();
   const bdList = document.getElementById('birthday-list');
   bdList.innerHTML = birthdays.map(b=>{
     const [m,d] = b.date.split('-').map(Number);
