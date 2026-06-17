@@ -560,9 +560,20 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         <div class="page-actions">
           <div>
             <div class="page-title">Content Board</div>
-            <div class="page-sub">Drag-and-drop Kanban for all client posts</div>
+            <div class="page-sub" id="kanban-sub">All client posts by status</div>
           </div>
-          <div style="display:flex;gap:10px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <!-- View toggle -->
+            <div style="display:flex;border:2px solid var(--gray2);border-radius:8px;overflow:hidden">
+              <button id="view-status-btn" onclick="switchKanbanView('status')"
+                style="padding:8px 14px;border:none;background:var(--pink);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">
+                📋 By Status
+              </button>
+              <button id="view-client-btn" onclick="switchKanbanView('client')"
+                style="padding:8px 14px;border:none;background:var(--white);color:var(--gray3);font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">
+                👥 By Client
+              </button>
+            </div>
             <button class="add-btn" style="background:var(--blue)" onclick="openBulkImportModal()">📄 Add Content from Doc</button>
             <button class="add-btn" onclick="openPostModal()">+ Single Post</button>
           </div>
@@ -1172,26 +1183,35 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         </select>
       </div>
       <div class="form-group">
-        <label>Platform</label>
-        <select id="bulk-platform">
-          <option value="Instagram">Instagram</option>
-          <option value="Facebook">Facebook</option>
-          <option value="LinkedIn">LinkedIn</option>
-          <option value="TikTok">TikTok</option>
-        </select>
+        <label>Platforms * (tick all that apply)</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border:2px solid #fce4ec;border-radius:8px;cursor:pointer;text-transform:none;letter-spacing:0;color:#c2185b;background:#fce4ec">
+            <input type="checkbox" id="bulk-p-instagram" value="Instagram" checked> Instagram</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border:2px solid #e3f2fd;border-radius:8px;cursor:pointer;text-transform:none;letter-spacing:0;color:#1565c0;background:#e3f2fd">
+            <input type="checkbox" id="bulk-p-facebook" value="Facebook" checked> Facebook</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border:2px solid #e8f5e9;border-radius:8px;cursor:pointer;text-transform:none;letter-spacing:0;color:#2e7d32;background:#e8f5e9">
+            <input type="checkbox" id="bulk-p-linkedin" value="LinkedIn"> LinkedIn</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border:2px solid #f3e5f5;border-radius:8px;cursor:pointer;text-transform:none;letter-spacing:0;color:#6a1b9a;background:#f3e5f5">
+            <input type="checkbox" id="bulk-p-tiktok" value="TikTok"> TikTok</label>
+        </div>
+        <p style="font-size:11px;color:var(--gray3);margin-top:6px">💡 One post card will be created per platform for each piece of content</p>
       </div>
       <div class="form-group">
-        <label>Post Type</label>
+        <label>Default Post Type <span style="font-weight:400;color:var(--gray3)">(used if not specified in Doc)</span></label>
         <select id="bulk-type">
           <option value="Single">Single</option>
           <option value="Carousel">Carousel</option>
           <option value="Reel">Reel</option>
           <option value="Story">Story</option>
         </select>
+        <p style="font-size:11px;color:var(--gray3);margin-top:4px">💡 In your Doc, add <code style="background:var(--gray);padding:1px 4px;border-radius:3px">Reel</code>, <code style="background:var(--gray);padding:1px 4px;border-radius:3px">Carousel</code> or <code style="background:var(--gray);padding:1px 4px;border-radius:3px">Single</code> on its own line under the date to set per-post type</p>
       </div>
       <div class="form-group">
         <label>Google Doc URL *</label>
         <input type="url" id="bulk-doc-url" placeholder="https://docs.google.com/document/d/...">
+      </div>
+      <div style="background:#fff8e1;border:2px solid #f9d71c;border-radius:10px;padding:12px 14px;font-size:12px;color:#7a6200;line-height:1.6;margin-bottom:4px">
+        💡 <strong>For images:</strong> In your Google Doc, paste the image Drive link or direct URL next to each post using the label <code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px">Image: https://...</code> on its own line. We'll pull it through automatically.
       </div>
       <div id="bulk-status" style="display:none;margin-top:12px;padding:14px;border-radius:10px;font-size:13px;line-height:1.6"></div>
       <div id="bulk-preview" style="display:none;margin-top:16px"></div>
@@ -1939,29 +1959,110 @@ window.addToGoogleCalendar = () => {
 // ── CONTENT BOARD ──
 const KANBAN_COLS = ['Draft','Review','Pending Approval','Approved','Scheduled','Published'];
 
+// Kanban view mode: 'status' (default) or 'client'
+let kanbanView = 'status';
+
 async function loadKanban() {
   const snap = await getDocs(collection(db,'posts'));
   const posts = snap.docs.map(d=>({id:d.id,...d.data()}));
   const board = document.getElementById('kanban-board');
-  board.innerHTML = KANBAN_COLS.map(col=>{
-    const colPosts = posts.filter(p=>p.status===col);
-    return `<div class="kanban-col">
-      <div class="kanban-col-title">${colTitle(col)} <span class="kanban-col-count">${colPosts.length}</span></div>
-      ${colPosts.map(p=>`
-        <div class="post-card" onclick="openPostModal('${p.id}')">
-          <div class="post-card-top">
-            <span class="post-client">${p.clientName||''}</span>
-            <span class="post-platform">${p.platform||''}</span>
+
+  if(kanbanView === 'client') {
+    // Group by client
+    const clientIds = [...new Set(posts.map(p=>p.clientId).filter(Boolean))];
+    // Sort by client name
+    clientIds.sort((a,b)=>{
+      const na = allClients.find(c=>c.id===a)?.name||a;
+      const nb = allClients.find(c=>c.id===b)?.name||b;
+      return na.localeCompare(nb);
+    });
+    board.style.flexDirection = 'column';
+    board.style.flexWrap = 'nowrap';
+    board.innerHTML = clientIds.map(cid=>{
+      const client = allClients.find(c=>c.id===cid);
+      const cPosts = posts.filter(p=>p.clientId===cid).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+      const color = client?.color||'#DD0B82';
+      const logo = getClientLogo(client?.name||'');
+      return `<div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden">
+        <!-- Client header -->
+        <div style="background:${color};padding:14px 20px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="toggleClientSection('${cid}')">
+          ${logo ? `<img src="${logo}" style="width:40px;height:28px;object-fit:contain;background:rgba(255,255,255,0.9);border-radius:6px;padding:2px">` : `<div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff">${(client?.name||'?')[0]}</div>`}
+          <div style="font-weight:700;font-size:16px;color:#fff;flex:1">${client?.name||cid}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${KANBAN_COLS.map(col=>{const n=cPosts.filter(p=>p.status===col).length; return n?`<span style="background:rgba(255,255,255,0.2);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:50px">${col} ${n}</span>`:''}).join('')}
           </div>
-          <span class="post-type type-${(p.type||'single').toLowerCase()}">${p.type||'Single'}</span>
-          <div class="post-date">${p.date?formatDate(p.date):''} ${p.time||''}</div>
-          ${p.caption?`<div class="post-caption">${p.caption}</div>`:''}
-        </div>`).join('')}
-    </div>`;
-  }).join('');
+          <span style="color:rgba(255,255,255,0.8);font-size:18px" id="arrow-${cid}">▾</span>
+        </div>
+        <!-- Posts grid -->
+        <div id="client-section-${cid}" style="padding:16px;display:flex;flex-wrap:wrap;gap:12px">
+          ${cPosts.map(p=>`
+            <div class="post-card" style="width:220px;flex-shrink:0" onclick="openPostModal('${p.id}')">
+              ${p.asset ? `<img src="${p.asset}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px" onerror="this.style.display='none'">` : ''}
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                <span class="post-type type-${(p.type||'single').toLowerCase()}">${p.type||'Single'}</span>
+                <span style="font-size:11px;color:var(--gray3)">${p.platform||''}</span>
+              </div>
+              <div class="post-date">${p.date?formatDate(p.date):''}</div>
+              ${p.caption?`<div class="post-caption" style="margin-top:6px">${p.caption}</div>`:''}
+              <div style="margin-top:6px"><span style="font-size:10px;padding:2px 8px;border-radius:50px;font-weight:700;background:${statusColor(p.status)};color:${statusTextColor(p.status)}">${p.status||'Draft'}</span></div>
+            </div>`).join('')}
+          ${!cPosts.length ? '<div style="color:var(--gray3);font-size:13px;padding:8px">No posts yet.</div>' : ''}
+        </div>
+      </div>`;
+    }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>No content yet. Add some posts!</p></div>';
+  } else {
+    // Status columns (original view)
+    board.style.flexDirection = 'row';
+    board.style.flexWrap = 'nowrap';
+    board.innerHTML = KANBAN_COLS.map(col=>{
+      const colPosts = posts.filter(p=>p.status===col).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+      return `<div class="kanban-col">
+        <div class="kanban-col-title">${colTitle(col)} <span class="kanban-col-count">${colPosts.length}</span></div>
+        ${colPosts.map(p=>`
+          <div class="post-card" onclick="openPostModal('${p.id}')">
+            <div class="post-card-top">
+              <span class="post-client">${p.clientName||''}</span>
+              <span class="post-platform">${p.platform||''}</span>
+            </div>
+            ${p.asset ? `<img src="${p.asset}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin:4px 0" onerror="this.style.display='none'">` : ''}
+            <span class="post-type type-${(p.type||'single').toLowerCase()}">${p.type||'Single'}</span>
+            <div class="post-date">${p.date?formatDate(p.date):''} ${p.time||''}</div>
+            ${p.caption?`<div class="post-caption">${p.caption}</div>`:''}
+          </div>`).join('')}
+      </div>`;
+    }).join('');
+  }
 }
 
+window.toggleClientSection = (cid) => {
+  const sec = document.getElementById('client-section-'+cid);
+  const arrow = document.getElementById('arrow-'+cid);
+  const hidden = sec.style.display === 'none';
+  sec.style.display = hidden ? 'flex' : 'none';
+  if(arrow) arrow.textContent = hidden ? '▾' : '▸';
+};
+
+function statusColor(s){return{Draft:'var(--gray)',Review:'#fff8e1','Pending Approval':'#fff3e0',Approved:'#e8f5e9',Scheduled:'#e3f2fd',Published:'#f3e5f5'}[s]||'var(--gray)';}
+function statusTextColor(s){return{Draft:'var(--gray3)',Review:'#b8a600','Pending Approval':'#e65100',Approved:'#2e7d32',Scheduled:'#1565c0',Published:'#6a1b9a'}[s]||'var(--gray3)';}
+
 function colTitle(col){return{Draft:'✏️ Draft',Review:'🔍 Review','Pending Approval':'⏳ Pending Approval',Approved:'✅ Approved',Scheduled:'📅 Scheduled',Published:'🚀 Published'}[col]||col;}
+
+window.switchKanbanView = (view) => {
+  kanbanView = view;
+  const statusBtn = document.getElementById('view-status-btn');
+  const clientBtn = document.getElementById('view-client-btn');
+  const sub = document.getElementById('kanban-sub');
+  if(view === 'client') {
+    statusBtn.style.background = 'var(--white)'; statusBtn.style.color = 'var(--gray3)';
+    clientBtn.style.background = 'var(--pink)'; clientBtn.style.color = '#fff';
+    if(sub) sub.textContent = 'All posts grouped by client';
+  } else {
+    clientBtn.style.background = 'var(--white)'; clientBtn.style.color = 'var(--gray3)';
+    statusBtn.style.background = 'var(--pink)'; statusBtn.style.color = '#fff';
+    if(sub) sub.textContent = 'All client posts by status';
+  }
+  loadKanban();
+};
 
 window.updatePostPlatforms = () => {
   const cid = document.getElementById('post-client').value;
@@ -2642,7 +2743,8 @@ window.fetchBulkDoc = async () => {
     }
 
     // Show preview
-    status.textContent = `✅ Found ${parsedBulkPosts.length} posts! Review below then click Save All Posts.`;
+    const totalCards = parsedBulkPosts.reduce((n,p)=>n+(p.platforms||[]).length,0);
+    status.textContent = `✅ Found ${parsedBulkPosts.length} posts across ${totalCards} platform cards! Review below then click Save All Posts.`;
     status.style.background = '#e8f5e9'; status.style.color = '#2e7d32';
 
     const preview = document.getElementById('bulk-preview');
@@ -2650,11 +2752,12 @@ window.fetchBulkDoc = async () => {
     preview.innerHTML = `<div style="font-weight:700;font-size:13px;margin-bottom:10px">Preview (${parsedBulkPosts.length} posts):</div>` +
       parsedBulkPosts.map((p,i)=>`
         <div style="background:var(--gray);border-radius:8px;padding:12px;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
             <span style="font-weight:700;font-size:13px;color:var(--pink)">${p.dateDisplay}</span>
-            <span style="font-size:11px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.platform}</span>
-            <span style="font-size:11px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.type}</span>
+            ${(p.platforms||[]).map(pl=>`<span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3);font-weight:600">${pl}</span>`).join('')}
+            <span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.type}</span>
           </div>
+          ${p.imageUrl ? `<div style="margin-bottom:8px"><img src="${p.imageUrl}" style="max-height:80px;border-radius:6px;object-fit:cover" onerror="this.style.display='none'"><span style="font-size:11px;color:var(--blue);margin-left:8px">🖼️ Image linked</span></div>` : ''}
           <div style="font-size:12px;color:var(--text);margin-bottom:6px;max-height:60px;overflow:hidden">${p.caption.substring(0,150)}${p.caption.length>150?'...':''}</div>
           <div style="font-size:11px;color:var(--blue)">${p.hashtags.substring(0,80)}${p.hashtags.length>80?'...':''}</div>
         </div>`).join('');
@@ -2667,14 +2770,22 @@ window.fetchBulkDoc = async () => {
   }
 };
 
+function getSelectedPlatforms() {
+  const platforms = [];
+  ['instagram','facebook','linkedin','tiktok'].forEach(p => {
+    const el = document.getElementById('bulk-p-'+p);
+    if(el && el.checked) platforms.push(el.value);
+  });
+  return platforms.length ? platforms : ['Instagram'];
+}
+
 function parseBulkDoc(text, clientId) {
   const client = allClients.find(c=>c.id===clientId);
-  const platform = document.getElementById('bulk-platform').value || 'Instagram';
-  const type = document.getElementById('bulk-type').value || 'Single';
-  const lines = text.split('\n').map(l=>l.trim());
+  const platforms = getSelectedPlatforms();
+  const defaultType = document.getElementById('bulk-type').value || 'Single';
+  const rawLines = text.split('\n').map(l=>l.trim());
   const posts = [];
 
-  // Date pattern: "2 July 2026" or "14 July 2026" etc
   const datePattern = /^(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i;
   const months = {january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
 
@@ -2682,50 +2793,55 @@ function parseBulkDoc(text, clientId) {
   let currentDateDisplay = '';
   let captionLines = [];
   let hashtagLines = [];
+  let imageUrl = '';
+  let currentType = defaultType;
   let inHashtags = false;
 
   const savePost = () => {
-    if(!currentDate || (!captionLines.length && !hashtagLines.length)) return;
+    if(!currentDate) return;
     const caption = captionLines.join('\n').trim();
     const hashtags = hashtagLines.join(' ').trim();
     if(caption || hashtags) {
-      posts.push({
-        clientId, clientName: client?.name||'',
-        platform, type,
-        date: currentDate,
-        dateDisplay: currentDateDisplay,
-        caption, hashtags,
-        status: 'Draft',
-        comments: [],
-        createdAt: new Date().toISOString()
-      });
+      posts.push({ clientId, clientName: client?.name||'', platforms, type: currentType,
+        date: currentDate, dateDisplay: currentDateDisplay,
+        caption, hashtags, imageUrl, status: 'Draft',
+        comments: [], createdAt: new Date().toISOString() });
     }
   };
 
-  for(const line of lines) {
+  for(const line of rawLines) {
     const dateMatch = line.match(datePattern);
     if(dateMatch) {
-      // Save previous post
       savePost();
-      // Start new post
       const day = dateMatch[1].padStart(2,'0');
       const month = String(months[dateMatch[2].toLowerCase()]).padStart(2,'0');
       const year = dateMatch[3];
       currentDate = `${year}-${month}-${day}`;
       currentDateDisplay = line;
-      captionLines = [];
-      hashtagLines = [];
-      inHashtags = false;
+      captionLines = []; hashtagLines = []; imageUrl = ''; inHashtags = false; currentType = defaultType;
     } else if(currentDate) {
-      if(line.startsWith('#') || inHashtags) {
+      const imgMatch = line.match(/^image:\s*(https?:\/\/\S+)/i);
+      if(imgMatch) {
+        imageUrl = imgMatch[1];
+      } else if(line.startsWith('#') || inHashtags) {
         inHashtags = true;
         if(line) hashtagLines.push(line);
       } else if(line) {
-        captionLines.push(line);
+        // Check if line specifies post type
+        const typeLower = line.toLowerCase().trim();
+        if(['reel','reels','carousel','carousels','single','story','stories'].some(t=>typeLower===t||typeLower.startsWith(t+' ')||typeLower.endsWith(' '+t))) {
+          // This line IS the type — store it, don't add to caption
+          if(typeLower.includes('reel')) currentType = 'Reel';
+          else if(typeLower.includes('carousel')) currentType = 'Carousel';
+          else if(typeLower.includes('story') || typeLower.includes('stories')) currentType = 'Story';
+          else if(typeLower.includes('single')) currentType = 'Single';
+        } else {
+          captionLines.push(line);
+        }
       }
     }
   }
-  savePost(); // Save last post
+  savePost();
   return posts;
 }
 
@@ -2736,10 +2852,19 @@ window.saveBulkPosts = async () => {
   btn.disabled = true;
   let saved = 0;
   for(const post of parsedBulkPosts) {
-    await addDoc(collection(db,'posts'), post);
-    saved++;
+    const postPlatforms = post.platforms || ['Instagram'];
+    for(const platform of postPlatforms) {
+      const { platforms, dateDisplay, imageUrl, ...postData } = post;
+      await addDoc(collection(db,'posts'), {
+        ...postData,
+        platform,
+        asset: imageUrl || '',
+        updatedAt: new Date().toISOString()
+      });
+      saved++;
+    }
   }
-  showToast(`✅ ${saved} posts added to the Content Board!`);
+  showToast(`✅ ${saved} post cards added to the Content Board!`);
   closeModal('bulk-import-modal');
   loadKanban();
   btn.textContent = '✅ Save All Posts';
