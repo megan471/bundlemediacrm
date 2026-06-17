@@ -445,6 +445,23 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 
       <!-- ── DASHBOARD ── -->
       <div class="page active" id="page-dashboard" style="display:block">
+        <!-- Reminder banners — shown dynamically -->
+        <div id="like-share-banner" style="display:none;background:linear-gradient(135deg,#DD0B82,#3496D3);color:#fff;border-radius:12px;padding:14px 20px;margin-bottom:16px;display:none;align-items:center;gap:14px">
+          <span style="font-size:24px">👍</span>
+          <div>
+            <div style="font-weight:700;font-size:15px">Like & Share Day — Monday Reminder</div>
+            <div style="font-size:13px;opacity:.9">Go like and share all clients across all platforms today!</div>
+          </div>
+          <button onclick="document.getElementById('like-share-banner').style.display='none'" style="margin-left:auto;background:rgba(255,255,255,0.2);border:none;border-radius:8px;padding:6px 14px;color:#fff;font-weight:700;cursor:pointer">Dismiss</button>
+        </div>
+        <div id="awareness-banner" style="display:none;background:var(--yellow-light);border:2px solid #f9d71c;border-radius:12px;padding:14px 20px;margin-bottom:16px;align-items:center;gap:14px">
+          <span style="font-size:24px">🗓️</span>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#b8a600" id="awareness-banner-text">Today is a special day!</div>
+            <div style="font-size:12px;color:#8a7a00">Consider creating content around this for relevant clients.</div>
+          </div>
+          <button onclick="document.getElementById('awareness-banner').style.display='none'" style="margin-left:auto;background:rgba(0,0,0,0.08);border:none;border-radius:8px;padding:6px 14px;color:#8a7a00;font-weight:700;cursor:pointer">Dismiss</button>
+        </div>
         <div class="page-header">
           <div class="page-title" id="dash-greeting">Good morning! 👋</div>
           <div class="page-sub">Here's what's happening at Bundle Media today</div>
@@ -595,11 +612,17 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       <!-- ── REPORTS ── -->
       <div class="page" id="page-reports">
         <div class="page-actions">
-          <div class="page-title">Reports</div>
-          <div style="display:flex;gap:12px;align-items:center">
+          <div><div class="page-title">Reports</div></div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
             <select id="report-month" style="padding:8px 14px;border:2px solid var(--gray2);border-radius:8px;font-size:14px;font-weight:600;outline:none" onchange="loadReports()"></select>
+            <button class="btn btn-blue" style="display:flex;align-items:center;gap:6px;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:600" onclick="openMetaSetup()">📊 Connect Meta</button>
             <button class="add-btn" onclick="openReportModal()">+ New Report</button>
           </div>
+        </div>
+        <div id="meta-status-bar" style="display:none;background:var(--blue-light);border:2px solid #bbdefb;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="font-weight:700;color:var(--blue)">📊 Meta Connected</span>
+          <span id="meta-connected-pages" style="color:var(--gray3)">Loading pages...</span>
+          <button class="btn btn-blue" style="padding:6px 14px;font-size:12px;margin-left:auto" onclick="pullMetaAnalytics()">Pull This Month's Analytics</button>
         </div>
         <div class="reports-list" id="reports-list">
           <div class="loading"><div class="spinner"></div>Loading reports...</div>
@@ -855,6 +878,9 @@ input,textarea,select{font-family:'Poppins',sans-serif}
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger" id="ev-delete-btn" style="display:none;margin-right:auto" onclick="deleteEvent()">Delete</button>
+      <button class="btn btn-outline" id="ev-gcal-btn" style="display:none;background:#fff;border-color:#4285f4;color:#4285f4" onclick="addToGoogleCalendar()">
+        📅 Add to Google Calendar
+      </button>
       <button class="btn btn-outline" onclick="closeModal('event-modal')">Cancel</button>
       <button class="btn btn-pink" onclick="saveEvent()">Save Event</button>
     </div>
@@ -901,6 +927,14 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         <div class="form-group full"><label>Caption</label><textarea id="post-caption" rows="4"></textarea></div>
         <div class="form-group full"><label>Hashtags</label><textarea id="post-hashtags" rows="2" placeholder="#hashtag1 #hashtag2"></textarea></div>
         <div class="form-group full"><label>Asset / Creative Link</label><input type="url" id="post-asset" placeholder="https://drive.google.com/..."></div>
+        <div class="form-group full" style="background:var(--blue-light);border-radius:10px;padding:14px;border:2px solid #bbdefb">
+          <label style="color:var(--blue)">📄 Import from Google Doc</label>
+          <div style="display:flex;gap:10px;margin-top:8px">
+            <input type="url" id="gdoc-url" placeholder="Paste Google Doc URL (must be set to Anyone with link can view)..." style="flex:1;padding:10px 14px;border:2px solid #bbdefb;border-radius:8px;font-size:13px;outline:none">
+            <button class="btn btn-blue" onclick="importFromGoogleDoc()" style="flex-shrink:0">Import</button>
+          </div>
+          <div id="gdoc-status" style="font-size:12px;color:var(--blue);margin-top:6px;display:none"></div>
+        </div>
       </div>
 
       <!-- Comment Thread -->
@@ -1078,6 +1112,41 @@ input,textarea,select{font-family:'Poppins',sans-serif}
   </div>
 </div>
 
+<!-- Meta API Setup Modal -->
+<div class="modal-overlay" id="meta-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title">📊 Connect Meta (Facebook & Instagram)</div>
+      <button class="modal-close" onclick="closeModal('meta-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--blue-light);border-radius:10px;padding:16px;margin-bottom:20px;font-size:13px;line-height:1.7">
+        <strong>How to connect:</strong><br>
+        1. Go to <a href="https://developers.facebook.com" target="_blank" style="color:var(--blue)">developers.facebook.com</a> → Create App → Business type<br>
+        2. Add <strong>Facebook Login</strong> and <strong>Instagram Graph API</strong> products<br>
+        3. Generate a <strong>Page Access Token</strong> for each client's Facebook page<br>
+        4. Paste each client's Page ID and Access Token below<br>
+        5. Once connected, click "Pull This Month's Analytics" on the Reports page
+      </div>
+      <div id="meta-client-tokens">
+        <div style="font-weight:700;margin-bottom:12px">Client Page Tokens</div>
+        <div id="meta-token-list" style="display:flex;flex-direction:column;gap:10px">
+          Loading clients...
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="form-group">
+        <label>App ID (from Meta Developer Portal)</label>
+        <input type="text" id="meta-app-id" placeholder="e.g. 1234567890">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('meta-modal')">Close</button>
+      <button class="btn btn-blue" onclick="saveMetaTokens()">Save Tokens</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1166,33 +1235,125 @@ const TEAM = {
   'casey@bundlemedia.africa': { name: 'Casey', role: 'content', photo: 'Casey' }
 };
 
-// ── SA PUBLIC HOLIDAYS 2025 + 2026 ──
+// ── SA PUBLIC HOLIDAYS + AWARENESS DAYS + LIKE & SHARE REMINDERS ──
 const SA_HOLIDAYS = [
-  {date:'2025-01-01',title:"New Year's Day"},
-  {date:'2025-03-21',title:'Human Rights Day'},
-  {date:'2025-04-18',title:'Good Friday'},
-  {date:'2025-04-21',title:'Family Day'},
-  {date:'2025-04-27',title:'Freedom Day'},
-  {date:'2025-05-01',title:'Workers Day'},
-  {date:'2025-06-16',title:'Youth Day'},
-  {date:'2025-08-09',title:"National Women's Day"},
-  {date:'2025-09-24',title:'Heritage Day'},
-  {date:'2025-12-16',title:'Day of Reconciliation'},
-  {date:'2025-12-25',title:'Christmas Day'},
-  {date:'2025-12-26',title:'Day of Goodwill'},
-  {date:'2026-01-01',title:"New Year's Day"},
-  {date:'2026-03-21',title:'Human Rights Day'},
-  {date:'2026-04-03',title:'Good Friday'},
-  {date:'2026-04-06',title:'Family Day'},
-  {date:'2026-04-27',title:'Freedom Day'},
-  {date:'2026-05-01',title:'Workers Day'},
-  {date:'2026-06-16',title:'Youth Day'},
-  {date:'2026-08-09',title:"National Women's Day"},
-  {date:'2026-09-24',title:'Heritage Day'},
-  {date:'2026-12-16',title:'Day of Reconciliation'},
-  {date:'2026-12-25',title:'Christmas Day'},
-  {date:'2026-12-26',title:'Day of Goodwill'},
+  // SA Public Holidays 2025
+  {date:'2025-01-01',title:"🎆 New Year's Day",type:'holiday'},
+  {date:'2025-03-21',title:'✊ Human Rights Day',type:'holiday'},
+  {date:'2025-04-18',title:'✝️ Good Friday',type:'holiday'},
+  {date:'2025-04-21',title:'👨‍👩‍👧 Family Day',type:'holiday'},
+  {date:'2025-04-27',title:'🗳️ Freedom Day',type:'holiday'},
+  {date:'2025-05-01',title:'⚒️ Workers Day',type:'holiday'},
+  {date:'2025-06-16',title:'✊ Youth Day',type:'holiday'},
+  {date:'2025-08-09',title:"👩 National Women's Day",type:'holiday'},
+  {date:'2025-09-24',title:'🌍 Heritage Day',type:'holiday'},
+  {date:'2025-12-16',title:'🕊️ Day of Reconciliation',type:'holiday'},
+  {date:'2025-12-25',title:'🎄 Christmas Day',type:'holiday'},
+  {date:'2025-12-26',title:'🎁 Day of Goodwill',type:'holiday'},
+  // SA Public Holidays 2026
+  {date:'2026-01-01',title:"🎆 New Year's Day",type:'holiday'},
+  {date:'2026-03-21',title:'✊ Human Rights Day',type:'holiday'},
+  {date:'2026-04-03',title:'✝️ Good Friday',type:'holiday'},
+  {date:'2026-04-06',title:'👨‍👩‍👧 Family Day',type:'holiday'},
+  {date:'2026-04-27',title:'🗳️ Freedom Day',type:'holiday'},
+  {date:'2026-05-01',title:'⚒️ Workers Day',type:'holiday'},
+  {date:'2026-06-16',title:'✊ Youth Day',type:'holiday'},
+  {date:'2026-08-09',title:"👩 National Women's Day",type:'holiday'},
+  {date:'2026-09-24',title:'🌍 Heritage Day',type:'holiday'},
+  {date:'2026-12-16',title:'🕊️ Day of Reconciliation',type:'holiday'},
+  {date:'2026-12-25',title:'🎄 Christmas Day',type:'holiday'},
+  {date:'2026-12-26',title:'🎁 Day of Goodwill',type:'holiday'},
 ];
+
+// ── AWARENESS & SPECIAL DAYS (annual, shown every year) ──
+function getAwarenessDays(year) {
+  return [
+    // January
+    {date:`${year}-01-17`,title:'🍷 Dry January ends — Wine content day',type:'other'},
+    {date:`${year}-01-24`,title:'☕ International Coffee Day (SA)',type:'other'},
+    // February
+    {date:`${year}-02-14`,title:'💕 Valentine's Day',type:'other'},
+    {date:`${year}-02-20`,title:'🌍 World Day of Social Justice',type:'other'},
+    // March
+    {date:`${year}-03-08`,title:'👩 International Women's Day',type:'other'},
+    {date:`${year}-03-15`,title:'🛒 World Consumer Rights Day',type:'other'},
+    {date:`${year}-03-20`,title:'🌸 World Happiness Day',type:'other'},
+    {date:`${year}-03-21`,title:'🌿 World Poetry Day / Forestry Day',type:'other'},
+    {date:`${year}-03-22`,title:'💧 World Water Day',type:'other'},
+    {date:`${year}-03-24`,title:'🐘 World Wildlife Day',type:'other'},
+    // April
+    {date:`${year}-04-07`,title:'🏥 World Health Day',type:'other'},
+    {date:`${year}-04-22`,title:'🌍 Earth Day',type:'other'},
+    {date:`${year}-04-23`,title:'📚 World Book Day',type:'other'},
+    {date:`${year}-04-25`,title:'🦟 World Malaria Day',type:'other'},
+    // May
+    {date:`${year}-05-03`,title:'🗞️ World Press Freedom Day',type:'other'},
+    {date:`${year}-05-12`,title:'👩‍⚕️ International Nurses Day',type:'other'},
+    {date:`${year}-05-15`,title:'👨‍👩‍👧 International Day of Families',type:'other'},
+    {date:`${year}-05-25`,title:'🌍 Africa Day',type:'other'},
+    {date:`${year}-05-31`,title:'🚭 World No Tobacco Day',type:'other'},
+    // June
+    {date:`${year}-06-01`,title:'👶 International Children's Day',type:'other'},
+    {date:`${year}-06-05`,title:'🌿 World Environment Day',type:'other'},
+    {date:`${year}-06-08`,title:'🌊 World Ocean Day',type:'other'},
+    {date:`${year}-06-14`,title:'🩸 World Blood Donor Day',type:'other'},
+    {date:`${year}-06-21`,title:'🍷 World Music Day / Winter Solstice',type:'other'},
+    // July
+    {date:`${year}-07-01`,title:'☕ International Joke Day / Food fun',type:'other'},
+    {date:`${year}-07-11`,title:'🌍 World Population Day',type:'other'},
+    {date:`${year}-07-18`,title:'✊ Nelson Mandela International Day',type:'other'},
+    {date:`${year}-07-29`,title:'🐯 International Tiger Day',type:'other'},
+    // August
+    {date:`${year}-08-01`,title:'🍺 National Beer Day SA',type:'other'},
+    {date:`${year}-08-12`,title:'👦 International Youth Day',type:'other'},
+    {date:`${year}-08-19`,title:'📸 World Photography Day',type:'other'},
+    // September
+    {date:`${year}-09-01`,title:'🌸 Spring Day SA',type:'other'},
+    {date:`${year}-09-05`,title:'🧑‍🍳 International Day of Charity',type:'other'},
+    {date:`${year}-09-16`,title:'🍷 Pinotage Day',type:'other'},
+    {date:`${year}-09-21`,title:'☮️ International Day of Peace',type:'other'},
+    {date:`${year}-09-27`,title:'🌍 World Tourism Day',type:'other'},
+    // October
+    {date:`${year}-10-01`,title:'☕ International Coffee Day',type:'other'},
+    {date:`${year}-10-04`,title:'🐾 World Animal Day',type:'other'},
+    {date:`${year}-10-05`,title:'👩‍🏫 World Teachers Day',type:'other'},
+    {date:`${year}-10-10`,title:'🧠 World Mental Health Day',type:'other'},
+    {date:`${year}-10-14`,title:'🍕 World Standards Day / Food Day',type:'other'},
+    {date:`${year}-10-16`,title:'🍽️ World Food Day',type:'other'},
+    {date:`${year}-10-31`,title:'🎃 Halloween',type:'other'},
+    // November
+    {date:`${year}-11-02`,title:'🍷 Cabernet Sauvignon Day',type:'other'},
+    {date:`${year}-11-05`,title:'🧁 National Doughnut Day',type:'other'},
+    {date:`${year}-11-11`,title:'🍷 SA Wine Day',type:'other'},
+    {date:`${year}-11-19`,title:'🚽 World Toilet Day / Water awareness',type:'other'},
+    {date:`${year}-11-25`,title:'🛍️ Black Friday',type:'other'},
+    {date:`${year}-11-28`,title:'🛒 Cyber Monday',type:'other'},
+    // December
+    {date:`${year}-12-01`,title:'🎗️ World AIDS Day',type:'other'},
+    {date:`${year}-12-03`,title:'♿ International Day of Persons with Disabilities',type:'other'},
+    {date:`${year}-12-05`,title:'🌿 World Soil Day',type:'other'},
+    {date:`${year}-12-10`,title:'✊ Human Rights Day (International)',type:'other'},
+  ];
+}
+
+// ── LIKE & SHARE REMINDERS — every Monday ──
+function getLikeShareReminders(year, month) {
+  const reminders = [];
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  for(let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    if(date.getDay() === 1) { // Monday
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      reminders.push({
+        date: dateStr,
+        title: '👍 Like & Share — all clients across all platforms',
+        type: 'deadline',
+        id: 'ls-' + dateStr
+      });
+    }
+  }
+  return reminders;
+}
 
 // ── AUTH HELPERS ──
 window.switchAuthTab = (tab) => {
@@ -1484,6 +1645,26 @@ window.deletePinFor = async (clientId, clientName) => {
 
 // ── DASHBOARD ──
 async function loadDashboard() {
+  // ── Show reminder banners based on today ──
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  // Like & Share banner — show on Mondays
+  const likeShareBanner = document.getElementById('like-share-banner');
+  if(likeShareBanner && today.getDay() === 1) {
+    likeShareBanner.style.display = 'flex';
+  }
+
+  // Awareness day banner — check if today is a special day
+  const awarenessDays = getAwarenessDays(today.getFullYear());
+  const todayAwareness = awarenessDays.find(a => a.date === todayStr);
+  const awarenessBanner = document.getElementById('awareness-banner');
+  if(awarenessBanner && todayAwareness) {
+    awarenessBanner.style.display = 'flex';
+    const textEl = document.getElementById('awareness-banner-text');
+    if(textEl) textEl.textContent = todayAwareness.title;
+  }
+
   // Birthday countdown
   const birthdays = [
     {name:'Megan', date:'02-09', photo:'Megan'},
@@ -1556,14 +1737,16 @@ async function renderCalendar() {
   const evSnap = await getDocs(collection(db,'events'));
   const events = evSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-  // Add holidays & birthdays as virtual events
-  const holidays = SA_HOLIDAYS.map(h=>({...h, type:'holiday', id:'h-'+h.date}));
+  // Add holidays, awareness days, birthdays & like/share reminders
+  const holidays = SA_HOLIDAYS.map(h=>({...h, type:h.type||'holiday', id:'h-'+h.date}));
+  const awareness = getAwarenessDays(calYear).map(a=>({...a, id:'aw-'+a.date}));
+  const likeShare = getLikeShareReminders(calYear, calMonth).map(r=>({...r}));
   const bdays = [
     {date:`${calYear}-02-09`, title:'🎂 Megan\'s Birthday', type:'birthday'},
     {date:`${calYear}-03-24`, title:'🎂 Stacey\'s Birthday', type:'birthday'},
     {date:`${calYear}-03-27`, title:'🎂 Casey\'s Birthday', type:'birthday'},
   ];
-  const allEvents = [...events, ...holidays, ...bdays];
+  const allEvents = [...events, ...holidays, ...awareness, ...likeShare, ...bdays];
 
   const first = new Date(calYear, calMonth, 1);
   const last = new Date(calYear, calMonth+1, 0);
@@ -1626,6 +1809,7 @@ window.openEventModal = async (id=null, prefillDate=null) => {
       document.getElementById('ev-link').value=e.link||'';
       document.getElementById('ev-notes').value=e.notes||'';
       document.getElementById('ev-delete-btn').style.display='block';
+      document.getElementById('ev-gcal-btn').style.display='block';
       document.getElementById('event-modal-title').textContent='Edit Event';
       toggleEventFields();
     }
@@ -1671,6 +1855,29 @@ window.deleteEvent = async () => {
   showToast('Event deleted');
   closeModal('event-modal');
   renderCalendar();
+};
+
+window.addToGoogleCalendar = () => {
+  const title = document.getElementById('ev-title').value.trim();
+  const date = document.getElementById('ev-date').value; // YYYY-MM-DD
+  const startTime = document.getElementById('ev-starttime').value; // HH:MM
+  const endTime = document.getElementById('ev-endtime').value;
+  const notes = document.getElementById('ev-notes').value.trim();
+  const link = document.getElementById('ev-link').value.trim();
+  if(!title || !date) { showToast('Please fill in title and date first', 'error'); return; }
+
+  // Format dates for Google Calendar URL
+  const formatGCal = (d, t) => {
+    const clean = d.replace(/-/g,'');
+    if(!t) return clean;
+    const timeParts = t.replace(':','') + '00';
+    return `${clean}T${timeParts}`;
+  };
+  const start = formatGCal(date, startTime);
+  const end = endTime ? formatGCal(date, endTime) : (startTime ? formatGCal(date, endTime||startTime) : formatGCal(date,''));
+  const details = [notes, link].filter(Boolean).join('\n');
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end||start}&details=${encodeURIComponent(details)}`;
+  window.open(url, '_blank');
 };
 
 // ── CONTENT BOARD ──
@@ -2331,6 +2538,68 @@ window.deleteCrmItem = async (id, colId) => {
   loadCrmBoards();
 };
 
+// ── GOOGLE DOC IMPORT ──
+window.importFromGoogleDoc = async () => {
+  const url = document.getElementById('gdoc-url').value.trim();
+  const status = document.getElementById('gdoc-status');
+  if(!url) { showToast('Please paste a Google Doc URL', 'error'); return; }
+
+  status.style.display = 'block';
+  status.textContent = '⏳ Fetching document...';
+
+  // Convert Google Doc URL to export URL
+  let docId = '';
+  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if(match) docId = match[1];
+  else { status.textContent = '❌ Could not find Doc ID in URL'; return; }
+
+  const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
+
+  try {
+    const res = await fetch(exportUrl);
+    if(!res.ok) throw new Error('Could not fetch — make sure Doc is set to "Anyone with link can view"');
+    const text = await res.text();
+
+    // Parse the doc — look for Caption: and Hashtags: sections
+    const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+    let caption = '', hashtags = '';
+
+    const captionIdx = lines.findIndex(l=>l.toLowerCase().startsWith('caption:'));
+    const hashtagIdx = lines.findIndex(l=>l.toLowerCase().startsWith('hashtag'));
+
+    if(captionIdx > -1) {
+      // Get everything from caption line until hashtags or end
+      const end = hashtagIdx > captionIdx ? hashtagIdx : lines.length;
+      caption = lines.slice(captionIdx, end)
+        .join(' ')
+        .replace(/^caption:/i, '')
+        .trim();
+    } else {
+      // No structured format — use first paragraph as caption
+      caption = lines.slice(0, 5).join(' ').trim();
+    }
+
+    if(hashtagIdx > -1) {
+      hashtags = lines.slice(hashtagIdx).join(' ').replace(/^hashtags?:/i,'').trim();
+    } else {
+      // Extract any hashtags from the text
+      const tags = text.match(/#[a-zA-Z0-9_]+/g);
+      if(tags) hashtags = [...new Set(tags)].join(' ');
+    }
+
+    // Populate fields
+    if(caption) document.getElementById('post-caption').value = caption;
+    if(hashtags) document.getElementById('post-hashtags').value = hashtags;
+
+    status.textContent = `✅ Imported successfully! ${caption?'Caption found.':''} ${hashtags?'Hashtags found.':''}`;
+    status.style.color = '#2e7d32';
+    document.getElementById('gdoc-url').value = '';
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+    status.style.color = '#c62828';
+  }
+};
+
 // ── BRIEFING ──
 function populateMonthSelectors() {
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -2385,12 +2654,18 @@ async function loadBriefing() {
           <div class="brief-section-label">📋 Agency Notes</div>
           <textarea class="brief-textarea" id="brief-notes-${c.id}"
             placeholder="Add internal notes for this client..."
-            onblur="saveBriefInline('${c.id}','${month}','${b.id||''}')"
-            onkeydown="if(event.ctrlKey&&event.key==='Enter')saveBriefInline('${c.id}','${month}','${b.id||''}')"
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')saveBriefNow('${c.id}','${month}','${b.id||''}')"
           >${b.agencyNotes||''}</textarea>
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+          <span id="brief-saved-${c.id}" style="font-size:11px;color:#2e7d32;display:none">✅ Saved</span>
+          <button onclick="saveBriefNow('${c.id}','${month}','${b.id||''}')"
+            style="margin-left:auto;padding:6px 16px;background:var(--pink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">
+            Save Notes
+          </button>
+        </div>
         ${b.clientNotes ? `<div>
-          <div class="brief-section-label">💬 Client Notes</div>
+          <div class="brief-section-label" style="margin-top:8px">💬 Client Notes</div>
           <div class="brief-client-notes-box">${b.clientNotes}</div>
         </div>` : ''}
       </div>
@@ -2405,9 +2680,10 @@ window.updateBriefStatus = async (clientId, month, briefId, selectEl) => {
   await saveBriefInline(clientId, month, briefId);
 };
 
-window.saveBriefInline = async (clientId, month, briefId) => {
+window.saveBriefNow = async (clientId, month, briefId) => {
   const notesEl = document.getElementById('brief-notes-'+clientId);
   const statusEl = document.getElementById('brief-status-'+clientId);
+  const savedEl = document.getElementById('brief-saved-'+clientId);
   if(!notesEl || !statusEl) return;
   const data = {
     clientId, month,
@@ -2419,11 +2695,19 @@ window.saveBriefInline = async (clientId, month, briefId) => {
     await updateDoc(doc(db,'briefs',briefId), data);
   } else {
     const newDoc = await addDoc(collection(db,'briefs'),{...data, createdAt:new Date().toISOString()});
-    // Update briefId in the DOM for subsequent saves
-    notesEl.setAttribute('onblur', `saveBriefInline('${clientId}','${month}','${newDoc.id}')`);
-    statusEl.setAttribute('onchange', `updateBriefStatus('${clientId}','${month}','${newDoc.id}',this)`);
+    // Store new doc ID for future saves on this card
+    const btn = notesEl.closest('.brief-card-body').querySelector('button');
+    if(btn) btn.setAttribute('onclick', `saveBriefNow('${clientId}','${month}','${newDoc.id}')`);
+  }
+  // Show saved indicator
+  if(savedEl) {
+    savedEl.style.display = 'block';
+    setTimeout(()=>savedEl.style.display='none', 2500);
   }
 };
+
+// Keep saveBriefInline as alias for status changes
+window.saveBriefInline = window.saveBriefNow;
 
 window.openBriefModal = async (clientId, month, briefId='') => {
   editingBriefId = briefId||null;
@@ -2711,7 +2995,7 @@ window.showPage = (page) => {
   if(page==='content') loadKanban();
   if(page==='todos') loadTodos();
   if(page==='briefing') loadBriefing();
-  if(page==='reports') loadReports();
+  if(page==='reports') { loadReports(); checkMetaStatus(); }
   if(page==='settings') { loadPinList(); }
   if(page==='crmsolutions') loadCrmBoards();
   if(page==='adhoc') loadAdhocBoards();
@@ -2731,6 +3015,120 @@ window.showToast = (msg,type='success') => {
   t.style.background=type==='error'?'#c62828':'#212121';
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
+};
+
+// ── META API ──
+window.openMetaSetup = async () => {
+  const tokenList = document.getElementById('meta-token-list');
+  // Load saved tokens from Firestore
+  const snap = await getDocs(collection(db,'metaTokens'));
+  const saved = {};
+  snap.docs.forEach(d=>{ saved[d.id]=d.data(); });
+  // Load app ID
+  const appSnap = await getDocs(collection(db,'metaConfig'));
+  if(!appSnap.empty) document.getElementById('meta-app-id').value = appSnap.docs[0].data().appId||'';
+
+  tokenList.innerHTML = allClients
+    .filter(c=>(c.platforms||[]).some(p=>['Facebook','Instagram'].includes(p)))
+    .map(c=>`
+      <div style="background:var(--gray);border-radius:8px;padding:12px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px">${c.name}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--gray3);margin-bottom:4px">Facebook Page ID</div>
+            <input type="text" id="meta-pageid-${c.id}" value="${saved[c.id]?.pageId||''}"
+              placeholder="Page ID" style="width:100%;padding:8px;border:2px solid var(--gray2);border-radius:6px;font-size:12px;outline:none">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--gray3);margin-bottom:4px">Access Token</div>
+            <input type="text" id="meta-token-${c.id}" value="${saved[c.id]?.accessToken||''}"
+              placeholder="Page Access Token" style="width:100%;padding:8px;border:2px solid var(--gray2);border-radius:6px;font-size:12px;outline:none">
+          </div>
+        </div>
+      </div>`).join('');
+  openModal('meta-modal');
+};
+
+window.saveMetaTokens = async () => {
+  const appId = document.getElementById('meta-app-id').value.trim();
+  if(appId) await setDoc(doc(db,'metaConfig','main'),{appId});
+  let saved = 0;
+  for(const c of allClients) {
+    const pageId = document.getElementById('meta-pageid-'+c.id)?.value.trim();
+    const token = document.getElementById('meta-token-'+c.id)?.value.trim();
+    if(pageId || token) {
+      await setDoc(doc(db,'metaTokens',c.id),{clientId:c.id, clientName:c.name, pageId, accessToken:token, updatedAt:new Date().toISOString()});
+      saved++;
+    }
+  }
+  showToast(`Saved tokens for ${saved} clients!`);
+  closeModal('meta-modal');
+  checkMetaStatus();
+};
+
+async function checkMetaStatus() {
+  const snap = await getDocs(collection(db,'metaTokens'));
+  const bar = document.getElementById('meta-status-bar');
+  if(!snap.empty) {
+    bar.style.display = 'flex';
+    document.getElementById('meta-connected-pages').textContent = `${snap.size} client pages connected`;
+  }
+}
+
+window.pullMetaAnalytics = async () => {
+  const month = document.getElementById('report-month').value;
+  const [year, mon] = month.split('-').map(Number);
+  const since = Math.floor(new Date(year, mon-1, 1).getTime()/1000);
+  const until = Math.floor(new Date(year, mon, 1).getTime()/1000);
+  const tokenSnap = await getDocs(collection(db,'metaTokens'));
+  if(tokenSnap.empty) { showToast('No Meta tokens saved. Click Connect Meta first.','error'); return; }
+  showToast('Pulling analytics... this may take a moment');
+  let pulled = 0;
+  for(const d of tokenSnap.docs) {
+    const {clientId, clientName, pageId, accessToken} = d.data();
+    if(!pageId || !accessToken) continue;
+    try {
+      // Pull Facebook Page insights
+      const metricsToFetch = 'page_impressions,page_reach,page_engaged_users,page_post_engagements,page_fan_adds_unique';
+      const url = `https://graph.facebook.com/v19.0/${pageId}/insights?metric=${metricsToFetch}&period=month&since=${since}&until=${until}&access_token=${accessToken}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data.error) { console.error(clientName, data.error.message); continue; }
+      // Map to our metrics format
+      const fbMetrics = {};
+      (data.data||[]).forEach(m=>{
+        const val = m.values?.[0]?.value||0;
+        const map = {
+          page_impressions:'Impressions', page_reach:'Reach',
+          page_engaged_users:'Engagement', page_post_engagements:'Interactions',
+          page_fan_adds_unique:'New Followers'
+        };
+        if(map[m.name]) fbMetrics[map[m.name]] = val;
+      });
+      // Find or create report for this client + month
+      const reportSnap = await getDocs(query(collection(db,'reports'),
+        where('clientId','==',clientId), where('month','==',month)));
+      const reportData = {
+        clientId, clientName: clientName||'', month,
+        metrics: { Facebook: fbMetrics },
+        status: 'draft',
+        pulledFromMeta: true,
+        pulledAt: new Date().toISOString()
+      };
+      if(reportSnap.empty) {
+        await addDoc(collection(db,'reports'),{...reportData, createdAt:new Date().toISOString()});
+      } else {
+        const existing = reportSnap.docs[0].data();
+        await updateDoc(doc(db,'reports',reportSnap.docs[0].id),{
+          metrics: {...(existing.metrics||{}), Facebook: fbMetrics},
+          pulledFromMeta: true, pulledAt: new Date().toISOString()
+        });
+      }
+      pulled++;
+    } catch(e) { console.error('Meta pull error for', clientName, e); }
+  }
+  showToast(`Analytics pulled for ${pulled} clients! Check Reports.`);
+  loadReports();
 };
 
 // ── SETTINGS ──
