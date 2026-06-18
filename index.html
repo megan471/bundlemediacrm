@@ -3867,6 +3867,7 @@ async function fetchDocWithImages(docId) {
 
   const data = await res.json();
   console.log('Netlify extracted', data.imageCount, 'images,', data.pairedPosts?.length, 'posts');
+  console.log('Debug:', JSON.stringify(data.debug));
   return { textContent: data.textContent, pairedPosts: data.pairedPosts, imagesByRid: {} };
 }
 
