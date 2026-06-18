@@ -2986,7 +2986,7 @@ window.fetchBulkDoc = async () => {
             ${(p.platforms||[]).map(pl=>`<span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3);font-weight:600">${pl}</span>`).join('')}
             <span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.type}</span>
           </div>
-          ${(p.asset && p.asset.length > 10) ? `<div style="margin-bottom:8px"><img src="${p.asset}" style="max-height:120px;border-radius:6px;object-fit:contain;background:#f5f5f5;width:100%;display:block"></div>` : (p.imageUrl ? `<div style="margin-bottom:8px"><img src="${p.imageUrl}" style="max-height:120px;border-radius:6px;object-fit:contain;background:#f5f5f5;width:100%"></div>` : '')}
+          ${(p.previewUrl||p.imageUrl) ? `<div style="margin-bottom:8px"><img src="${p.previewUrl||p.imageUrl}" style="max-height:120px;border-radius:6px;object-fit:contain;background:#f5f5f5;width:100%;display:block"></div>` : (p.asset && p.asset.length>10 ? `<div style="margin-bottom:8px;padding:8px;background:#e8f5e9;border-radius:6px;font-size:12px;color:#2e7d32">🖼️ Image ready (${Math.round(p.asset.length/1024)}KB)</div>` : '')}
           <div style="font-size:12px;color:var(--text);margin-bottom:6px;max-height:60px;overflow:hidden">${p.caption.substring(0,150)}${p.caption.length>150?'...':''}</div>
           <div style="font-size:11px;color:var(--blue)">${p.hashtags.substring(0,80)}${p.hashtags.length>80?'...':''}</div>
         </div>`).join('');
@@ -3968,6 +3968,18 @@ function parsePairedPosts(pairedPosts, clientId) {
     }
 
     if(foundDate && (captionLines.length || hashtagLines.length)) {
+      // Convert base64 to blob URL for preview display
+      let previewUrl = '';
+      if(pair.imageBase64 && pair.imageBase64.startsWith('data:')) {
+        try {
+          const arr = pair.imageBase64.split(',');
+          const mime = arr[0].match(/:(.*?);/)[1];
+          const bstr = atob(arr[1]);
+          const u8 = new Uint8Array(bstr.length);
+          for(let k=0;k<bstr.length;k++) u8[k]=bstr.charCodeAt(k);
+          previewUrl = URL.createObjectURL(new Blob([u8],{type:mime}));
+        } catch(e) { previewUrl = ''; }
+      }
       posts.push({
         clientId, clientName: client?.name||'',
         platforms, type: currentType,
@@ -3975,6 +3987,7 @@ function parsePairedPosts(pairedPosts, clientId) {
         caption: captionLines.join('\n').trim(),
         hashtags: hashtagLines.join(' ').trim(),
         asset: pair.imageBase64 || '',
+        previewUrl,
         status: 'Draft', comments: [],
         createdAt: new Date().toISOString()
       });
