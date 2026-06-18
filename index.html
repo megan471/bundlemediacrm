@@ -95,12 +95,12 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .card-title{font-size:15px;font-weight:700;margin-bottom:16px}
 
 /* ── CLIENTS ── */
-.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;width:100%}
-.client-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s;border:2px solid transparent}
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;width:100%}
+.client-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s;border:2px solid transparent;overflow:hidden;word-break:break-word}
 .client-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--pink)}
-.client-card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.client-card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
 .client-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--white);flex-shrink:0}
-.client-name{font-size:14px;font-weight:700}
+.client-name{font-size:14px;font-weight:700;word-break:break-word;line-height:1.3}
 .client-since{font-size:11px;color:var(--gray3)}
 .platform-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
 .platform-tag{padding:3px 8px;border-radius:50px;font-size:10px;font-weight:600}
@@ -109,7 +109,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .tag-linkedin{background:#e8f5e9;color:#2e7d32}
 .tag-tiktok{background:#f3e5f5;color:#6a1b9a}
 .tag-youtube{background:#fff3e0;color:#e65100}
-.client-meta{font-size:12px;color:var(--gray3);display:flex;gap:16px}
+.client-meta{font-size:12px;color:var(--gray3);display:flex;gap:10px;flex-wrap:wrap}
 .search-bar{display:flex;gap:12px;margin-bottom:20px}
 .search-input{flex:1;padding:12px 16px;border:2px solid var(--gray2);border-radius:10px;font-size:14px;outline:none;transition:border-color .2s}
 .search-input:focus{border-color:var(--pink)}
@@ -618,6 +618,35 @@ input,textarea,select{font-family:'Poppins',sans-serif}
             <div class="page-title">To-Do Lists</div>
             <div class="page-sub">Add tasks directly in each panel below</div>
           </div>
+        </div>
+        <!-- Casey: Task for Admin panel -->
+        <div id="casey-admin-panel" style="display:none;padding:16px 24px;background:var(--white);border-bottom:2px solid var(--gray2);flex-shrink:0">
+          <div style="font-weight:700;font-size:15px;margin-bottom:12px">📬 Send a Task to Admin</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div style="flex:1;min-width:200px">
+              <label style="font-size:11px;font-weight:700;color:var(--gray3);display:block;margin-bottom:4px">ASSIGN TO</label>
+              <select id="casey-assign-to" style="width:100%;padding:8px 12px;border:2px solid var(--gray2);border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none">
+                <option value="Megan">Megan</option>
+                <option value="Stacey">Stacey</option>
+              </select>
+            </div>
+            <div style="flex:3;min-width:240px">
+              <label style="font-size:11px;font-weight:700;color:var(--gray3);display:block;margin-bottom:4px">TASK</label>
+              <input id="casey-task-input" type="text" placeholder="e.g. Please update the Arbour Cafe brief..." 
+                style="width:100%;padding:8px 12px;border:2px solid var(--gray2);border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box"
+                onkeydown="if(event.key==='Enter')sendCaseyTask()">
+            </div>
+            <div style="flex:1;min-width:100px">
+              <label style="font-size:11px;font-weight:700;color:var(--gray3);display:block;margin-bottom:4px">PRIORITY</label>
+              <select id="casey-task-priority" style="width:100%;padding:8px 12px;border:2px solid var(--gray2);border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none">
+                <option value="MED">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="LOW">Low</option>
+              </select>
+            </div>
+            <button onclick="sendCaseyTask()" class="btn btn-pink" style="padding:8px 20px;white-space:nowrap;flex-shrink:0">Send Task ➤</button>
+          </div>
+          <div id="casey-tasks-sent" style="margin-top:12px"></div>
         </div>
         <div class="todo-boards" id="todo-boards" style="flex:1;height:0;margin:0;border-radius:0;border:none;border-top:none">
           <div class="loading"><div class="spinner"></div>Loading tasks...</div>
@@ -1611,6 +1640,9 @@ async function startAgencyApp() {
     document.querySelectorAll('.nav-item').forEach(n => {
       if(n.textContent.includes('Monthly Tracker')) n.style.display='none';
     });
+    // Show Casey's send-to-admin panel
+    const caseyPanel = document.getElementById('casey-admin-panel');
+    if(caseyPanel) caseyPanel.style.display = 'block';
   }
 
   // Admin pin management
@@ -2420,6 +2452,34 @@ function renderTodoBoards(todos) {
   }).join('');
 }
 
+window.sendCaseyTask = async () => {
+  const assignTo = document.getElementById('casey-assign-to').value;
+  const text = document.getElementById('casey-task-input').value.trim();
+  const priority = document.getElementById('casey-task-priority').value;
+  if(!text) { showToast('Please type a task first', 'error'); return; }
+
+  // Add directly to their todo list in Firestore
+  const newTodo = {
+    text,
+    priority,
+    done: false,
+    assignedTo: assignTo,
+    assignedBy: 'Casey',
+    createdAt: new Date().toISOString()
+  };
+  await addDoc(collection(db,'todos'), newTodo);
+
+  // Show confirmation
+  document.getElementById('casey-task-input').value = '';
+  const sentDiv = document.getElementById('casey-tasks-sent');
+  const item = document.createElement('div');
+  item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:#e8f5e9;border-radius:8px;font-size:12px;margin-bottom:4px';
+  item.innerHTML = `<span style="color:#2e7d32">✅</span> <span>Task sent to <strong>${assignTo}</strong>: "${text}"</span>`;
+  sentDiv.prepend(item);
+  setTimeout(() => item.remove(), 5000);
+  showToast(`Task sent to ${assignTo}!`);
+};
+
 function loadTodos() {
   // Unsubscribe previous listener if any
   if(todoUnsubscribe) todoUnsubscribe();
@@ -2978,17 +3038,29 @@ window.fetchBulkDoc = async () => {
       const a = parsedBulkPosts[0].asset || '';
       console.log('Post 0 asset type:', a ? a.substring(0,30) : 'EMPTY', 'length:', a.length);
     }
-    preview.innerHTML = `<div style="font-weight:700;font-size:13px;margin-bottom:10px">Preview (${parsedBulkPosts.length} posts):</div>` +
+    preview.innerHTML = `<div style="font-weight:700;font-size:13px;margin-bottom:10px">Preview (${parsedBulkPosts.length} posts) — attach images below:</div>` +
       parsedBulkPosts.map((p,i)=>`
         <div style="background:var(--gray);border-radius:8px;padding:12px;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
             <span style="font-weight:700;font-size:13px;color:var(--pink)">${p.dateDisplay}</span>
             ${(p.platforms||[]).map(pl=>`<span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3);font-weight:600">${pl}</span>`).join('')}
             <span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.type}</span>
           </div>
-          ${(p.previewUrl||p.imageUrl) ? `<div style="margin-bottom:8px"><img src="${p.previewUrl||p.imageUrl}" style="max-height:120px;border-radius:6px;object-fit:contain;background:#f5f5f5;width:100%;display:block"></div>` : (p.asset && p.asset.length>10 ? `<div style="margin-bottom:8px;padding:8px;background:#e8f5e9;border-radius:6px;font-size:12px;color:#2e7d32">🖼️ Image ready (${Math.round(p.asset.length/1024)}KB)</div>` : '')}
-          <div style="font-size:12px;color:var(--text);margin-bottom:6px;max-height:60px;overflow:hidden">${p.caption.substring(0,150)}${p.caption.length>150?'...':''}</div>
-          <div style="font-size:11px;color:var(--blue)">${p.hashtags.substring(0,80)}${p.hashtags.length>80?'...':''}</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+            <div style="flex-shrink:0">
+              <div id="preview-img-${i}" style="width:80px;height:80px;border-radius:8px;background:#e8e8e4;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px dashed var(--gray2)">
+                ${p.asset && p.asset.length > 100 ? `<span style="font-size:10px;color:#2e7d32;text-align:center;padding:4px">🖼️ Image<br>attached</span>` : `<span style="font-size:22px">🖼️</span>`}
+              </div>
+              <label style="display:block;margin-top:6px;cursor:pointer;text-align:center">
+                <span style="font-size:10px;color:var(--pink);font-weight:700">📎 Attach</span>
+                <input type="file" accept="image/*,.pdf" style="display:none" onchange="attachPreviewImage(this,${i})">
+              </label>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;color:var(--text);margin-bottom:4px;max-height:60px;overflow:hidden">${p.caption.substring(0,150)}${p.caption.length>150?'...':''}</div>
+              <div style="font-size:11px;color:var(--blue)">${p.hashtags.substring(0,80)}${p.hashtags.length>80?'...':''}</div>
+            </div>
+          </div>
         </div>`).join('');
 
     document.getElementById('bulk-save-btn').style.display = 'block';
@@ -3075,6 +3147,22 @@ function parseBulkDoc(text, clientId) {
   savePost();
   return posts;
 }
+
+window.attachPreviewImage = (input, index) => {
+  const file = input.files[0];
+  if(!file || !parsedBulkPosts[index]) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    parsedBulkPosts[index].asset = e.target.result;
+    // Update the preview box
+    const box = document.getElementById('preview-img-' + index);
+    if(box) {
+      box.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+      box.style.border = '2px solid var(--pink)';
+    }
+  };
+  reader.readAsDataURL(file);
+};
 
 window.saveBulkPosts = async () => {
   if(!parsedBulkPosts.length) return;
