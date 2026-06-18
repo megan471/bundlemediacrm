@@ -2981,9 +2981,9 @@ window.fetchBulkDoc = async () => {
             ${(p.platforms||[]).map(pl=>`<span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3);font-weight:600">${pl}</span>`).join('')}
             <span style="font-size:10px;background:var(--white);padding:2px 8px;border-radius:50px;color:var(--gray3)">${p.type}</span>
           </div>
-          ${(p.imageUrl||p.asset) ? `<div style="margin-bottom:8px">
-            <img src="${p.imageUrl||p.asset}" style="max-height:100px;border-radius:6px;object-fit:contain;background:#f5f5f5;width:100%" onerror="this.style.display='none'">
-            <span style="font-size:11px;color:var(--blue)">${(p.imageUrl||p.asset||'').startsWith('data:') ? '🖼️ Image extracted from Doc' : '🔗 Image linked'}</span>
+          ${(p.asset||p.imageUrl) ? `<div style="margin-bottom:8px">
+            <img src="${p.asset||p.imageUrl}" style="max-height:120px;border-radius:6px;object-fit:contain;background:#f5f5f5;width:100%" onerror="this.style.display='none'">
+            <span style="font-size:11px;color:var(--blue)">${(p.asset||p.imageUrl||'').startsWith('data:') ? '🖼️ Image extracted from Doc' : '🔗 Image linked'}</span>
           </div>` : ''}
           <div style="font-size:12px;color:var(--text);margin-bottom:6px;max-height:60px;overflow:hidden">${p.caption.substring(0,150)}${p.caption.length>150?'...':''}</div>
           <div style="font-size:11px;color:var(--blue)">${p.hashtags.substring(0,80)}${p.hashtags.length>80?'...':''}</div>
