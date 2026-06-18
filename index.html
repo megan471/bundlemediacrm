@@ -3852,6 +3852,30 @@ function initGoogleAuth(resolve, reject) {
 async function fetchDocWithImages(docId) {
   if(!googleAccessToken) await signInWithGoogle();
 
+  // Call our Netlify server-side function — bypasses all CORS issues
+  const res = await fetch('/.netlify/functions/extract-doc-images', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ docId, accessToken: googleAccessToken })
+  });
+
+  if(!res.ok) {
+    const err = await res.json().catch(()=>({error:'Unknown error'}));
+    throw new Error(err.error || 'Server error extracting images');
+  }
+
+  const data = await res.json();
+  console.log('Server extracted', data.imageCount, 'images,', data.pairedPosts?.length, 'posts');
+  return {
+    textContent: data.textContent,
+    pairedPosts: data.pairedPosts,
+    imagesByRid: {}
+  };
+}
+
+async function fetchDocWithImages_OLD_UNUSED(docId) {
+  if(!googleAccessToken) await signInWithGoogle();
+
   // Step 1: Get doc structure via Docs API JSON
   const docRes = await fetch(
     'https://docs.googleapis.com/v1/documents/' + docId,
