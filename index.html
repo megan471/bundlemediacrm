@@ -646,7 +646,13 @@ input,textarea,select{font-family:'Poppins',sans-serif}
             </div>
             <button onclick="sendCaseyTask()" class="btn btn-pink" style="padding:8px 20px;white-space:nowrap;flex-shrink:0">Send Task ➤</button>
           </div>
-          <div id="casey-tasks-sent" style="margin-top:12px"></div>
+          <!-- My Sent Tasks tracker -->
+          <div style="margin-top:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--gray3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">My Sent Tasks</div>
+            <div id="casey-sent-tasks-list" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto">
+              <div style="font-size:12px;color:var(--gray3);font-style:italic">Loading your tasks...</div>
+            </div>
+          </div>
         </div>
         <div class="todo-boards" id="todo-boards" style="flex:1;height:0;margin:0;border-radius:0;border:none;border-top:none">
           <div class="loading"><div class="spinner"></div>Loading tasks...</div>
@@ -1582,11 +1588,26 @@ window.agencyLogin = async () => {
   const err = document.getElementById('ag-error');
   err.style.display = 'none';
   try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    const t = TEAM[email];
-    if(!t) { await signOut(auth); err.textContent='Not authorised.'; err.style.display='block'; return; }
-    currentUser = { name: t.name, role: t.role, email };
+    // Check if there's a Firestore password override first
+    const passKey = email.replace('@','_').replace('.','_');
+    let useFirestorePass = false;
+    try {
+      const passDoc = await getDoc(doc(db, 'teamPasswords', passKey));
+      if(passDoc.exists() && passDoc.data().password === pass) {
+        useFirestorePass = true;
+      } else if(passDoc.exists() && passDoc.data().password !== pass) {
+        err.textContent = 'Incorrect email or password.';
+        err.style.display = 'block';
+        return;
+      }
+    } catch(e) { /* no override, try Firebase Auth */ }
 
+    if(!useFirestorePass) {
+      await signInWithEmailAndPassword(auth, email, pass);
+    }
+    const t = TEAM[email];
+    if(!t) { if(!useFirestorePass) await signOut(auth); err.textContent='Not authorised.'; err.style.display='block'; return; }
+    currentUser = { name: t.name, role: t.role, email };
     startAgencyApp();
   } catch(e) {
     err.textContent = 'Incorrect email or password.';
@@ -1643,6 +1664,7 @@ async function startAgencyApp() {
     // Show Casey's send-to-admin panel
     const caseyPanel = document.getElementById('casey-admin-panel');
     if(caseyPanel) caseyPanel.style.display = 'block';
+    loadCaseySentTasks();
   }
 
   // Admin pin management
@@ -2461,27 +2483,46 @@ window.sendCaseyTask = async () => {
   const priority = document.getElementById('casey-task-priority').value;
   if(!text) { showToast('Please type a task first', 'error'); return; }
 
-  // Add directly to their todo list in Firestore
-  const newTodo = {
+  await addDoc(collection(db,'todos'), {
     text,
     priority,
     done: false,
     assignedTo: assignTo,
     assignedBy: 'Casey',
     createdAt: new Date().toISOString()
-  };
-  await addDoc(collection(db,'todos'), newTodo);
+  });
 
-  // Show confirmation
   document.getElementById('casey-task-input').value = '';
-  const sentDiv = document.getElementById('casey-tasks-sent');
-  const item = document.createElement('div');
-  item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:#e8f5e9;border-radius:8px;font-size:12px;margin-bottom:4px';
-  item.innerHTML = `<span style="color:#2e7d32">✅</span> <span>Task sent to <strong>${assignTo}</strong>: "${text}"</span>`;
-  sentDiv.prepend(item);
-  setTimeout(() => item.remove(), 5000);
   showToast(`Task sent to ${assignTo}!`);
 };
+
+function loadCaseySentTasks() {
+  const list = document.getElementById('casey-sent-tasks-list');
+  if(!list) return;
+  onSnapshot(query(collection(db,'todos'), where('assignedBy','==','Casey')), (snap) => {
+    const tasks = snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+    if(tasks.length === 0) {
+      list.innerHTML = '<div style="font-size:12px;color:var(--gray3);font-style:italic">No tasks sent yet.</div>';
+      return;
+    }
+    list.innerHTML = tasks.map(t => {
+      const done = t.done;
+      const date = t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-ZA',{day:'numeric',month:'short'}) : '';
+      const priBg = t.priority==='HIGH' ? '#fce4ec' : t.priority==='LOW' ? '#e8f5e9' : '#fff8e1';
+      const priColor = t.priority==='HIGH' ? '#c62828' : t.priority==='LOW' ? '#2e7d32' : '#f57f17';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:${done?'#f5f5f5':'var(--cream)'};border-radius:8px;border:1.5px solid ${done?'#e0e0e0':'var(--gray2)'}">
+        <span style="font-size:16px">${done ? '✅' : '⏳'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:${done?'var(--gray3)':'var(--dark)'};text-decoration:${done?'line-through':'none'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.text}</div>
+          <div style="font-size:11px;color:var(--gray3)">→ ${t.assignedTo} · ${date}</div>
+        </div>
+        <span style="font-size:10px;font-weight:700;color:${priColor};background:${priBg};padding:2px 7px;border-radius:20px;flex-shrink:0">${t.priority}</span>
+        <span style="font-size:11px;font-weight:700;color:${done?'#2e7d32':'#9e9e9e'};flex-shrink:0">${done?'DONE':'PENDING'}</span>
+      </div>`;
+    }).join('');
+  });
+}
 
 function loadTodos() {
   // Unsubscribe previous listener if any
@@ -4231,13 +4272,12 @@ window.changeTeamPassword = async (email, inputId, name) => {
     return;
   }
   try {
-    // Sign the target user in with their current password won't work without knowing it
-    // Best available approach from browser: send a password reset email via Firebase Auth
-    // Import sendPasswordResetEmail
-    const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-    await sendPasswordResetEmail(auth, email);
+    // Store the password override in Firestore — login checks this first
+    await setDoc(doc(db, 'teamPasswords', email.replace('@','_').replace('.','_')), {
+      email, password: newPass, updatedAt: new Date().toISOString()
+    });
     document.getElementById(inputId).value = '';
-    showToast(`Password reset email sent to ${email} — ${name} must check their inbox and set the new password from the link`);
+    showToast(`✅ Password updated for ${name} — they can log in with the new password now`);
   } catch(e) {
     showToast('Error: ' + e.message, 'error');
   }
