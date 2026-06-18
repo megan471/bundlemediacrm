@@ -1632,7 +1632,7 @@ async function startAgencyApp() {
     document.getElementById('settings-nav-section').style.display = 'none';
     document.querySelectorAll('.nav-item').forEach(n => {
       const txt = n.textContent.trim();
-      const allowed = ['Dashboard','Content Board','To-Do Lists','Briefing','Clients','Ad Hoc'];
+      const allowed = ['Dashboard','Content Board','To-Do Lists','Briefing','Clients','Ad Hoc','Calendar'];
       if(allowed.some(x=>txt.includes(x))) n.style.display='flex';
       else n.style.display='none';
     });
@@ -2412,7 +2412,7 @@ function renderTodoBoards(todos) {
     if(el) savedInputs[m] = el.value;
   });
   boards.innerHTML = members.map(m=>{
-    const mtodos = todos.filter(t=>t.assignee===m);
+    const mtodos = todos.filter(t=>(t.assignee===m)||(t.assignedTo===m));
     const open = mtodos.filter(t=>!t.done);
     const done = mtodos.filter(t=>t.done);
     const sorted = [...open.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')),
@@ -2431,7 +2431,10 @@ function renderTodoBoards(todos) {
             <div class="todo-check${t.done?' checked':''}" onclick="toggleTodo('${t.id}',${!t.done},'${m}')">${t.done?'✓':''}</div>
             <div class="todo-item-body">
               <div class="todo-text${t.done?' done':''}">${t.text}</div>
-              <div class="todo-priority-label priority-${(t.priority||'High').toLowerCase().replace('medium','med')}-label">${(t.priority||'High').toUpperCase()}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+                <div class="todo-priority-label priority-${(t.priority||'High').toLowerCase().replace('medium','med')}-label">${(t.priority||'High').toUpperCase()}</div>
+                ${t.assignedBy ? `<span style="font-size:10px;color:var(--gray3);font-style:italic">from ${t.assignedBy}</span>` : ''}
+              </div>
             </div>
           </div>`).join('') : '<div style="padding:20px 0;color:var(--gray3);font-size:13px">No tasks yet.</div>'}
       </div>
@@ -2506,6 +2509,7 @@ window.quickAddTodo = async (member) => {
   const data = {
     text,
     assignee: member,
+    assignedTo: member,
     priority: boardPriority[member]||'High',
     done: false,
     createdAt: new Date().toISOString(),
