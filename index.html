@@ -179,7 +179,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 
 /* ── TODOS ── */
 .todo-boards{display:grid;grid-template-columns:repeat(3,1fr);gap:0;height:100%;border:1px solid var(--gray2);border-radius:var(--radius);overflow:hidden}
-.todo-board{background:var(--white);display:flex;flex-direction:column;border-right:1px solid var(--gray2)}
+.todo-board{background:var(--white);display:flex;flex-direction:column;border-right:1px solid var(--gray2);min-height:0;overflow:hidden}
 .todo-board:last-child{border-right:none}
 .todo-board-header{padding:20px 20px 8px;flex-shrink:0}
 .todo-board-dot{width:10px;height:10px;border-radius:50%;margin-bottom:10px}
@@ -612,7 +612,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       </div>
 
       <!-- ── TODOS ── -->
-      <div class="page" id="page-todos" style="display:none;flex-direction:column;position:fixed;top:64px;left:220px;right:0;bottom:0;z-index:1;background:var(--cream)">
+      <div class="page" id="page-todos" style="display:none;flex-direction:column;position:fixed;top:64px;left:220px;right:0;bottom:0;z-index:1;background:var(--cream);overflow:hidden">
         <div style="padding:14px 24px 10px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;background:var(--white);border-bottom:1px solid var(--gray2)">
           <div>
             <div class="page-title">To-Do Lists</div>
@@ -654,7 +654,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
             </div>
           </div>
         </div>
-        <div class="todo-boards" id="todo-boards" style="flex:1;height:0;margin:0;border-radius:0;border:none;border-top:none">
+        <div class="todo-boards" id="todo-boards" style="flex:1;min-height:0;margin:0;border-radius:0;border:none;border-top:none">
           <div class="loading"><div class="spinner"></div>Loading tasks...</div>
         </div>
       </div>
@@ -3314,6 +3314,13 @@ function populateMonthSelectors() {
   });
 }
 
+// Convert plain URLs in text to clickable links
+function linkifyText(text) {
+  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return escaped.replace(/(https?:\/\/[^\s<>"]+)/g,
+    '<a href="$1" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline;word-break:break-all">$1</a>');
+}
+
 async function loadBriefing() {
   const month = document.getElementById('brief-month').value;
   const grid = document.getElementById('brief-grid');
@@ -3351,9 +3358,9 @@ async function loadBriefing() {
         <!-- Posted notes thread -->
         <div id="brief-thread-${c.id}">
           ${(b.notes&&b.notes.length) ? b.notes.map((n,ni)=>`
-            <div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative">
+            <div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative;overflow:hidden">
               <div style="font-size:11px;font-weight:700;color:var(--pink);margin-bottom:4px">${n.author} &middot; ${n.time}</div>
-              <div style="font-size:13px;color:var(--text);white-space:pre-wrap">${n.text}</div>
+              <div style="font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word">${linkifyText(n.text)}</div>
               <button onclick="deleteBriefNote('${c.id}','${month}','${b.id||''}',${ni})"
                 style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--gray3);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;line-height:1" title="Delete">✕</button>
             </div>`).join('') : '<div style="font-size:12px;color:var(--gray3);padding:4px 0 8px">No notes posted yet.</div>'}
@@ -3432,7 +3439,7 @@ window.postBriefNote = async (clientId, month, briefId) => {
     noteEl.style.cssText = 'background:var(--gray);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative';
     noteEl.innerHTML = `
       <div style="font-size:11px;font-weight:700;color:var(--pink);margin-bottom:4px">${newNote.author} &middot; ${newNote.time}</div>
-      <div style="font-size:13px;color:var(--text);white-space:pre-wrap">${newNote.text}</div>`;
+      <div style="font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word">${linkifyText(newNote.text)}</div>`;
     thread.appendChild(noteEl);
   }
   showToast('Note posted!');
