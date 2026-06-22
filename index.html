@@ -2424,21 +2424,28 @@ const boardPriority = { Megan:'High', Stacey:'High', Casey:'High' };
 let todoUnsubscribe = null;
 
 function renderTodoBoards(todos) {
-  const members = currentUser.role==='content' ? ['Casey'] : ['Megan','Stacey','Casey'];
+  const isContent = currentUser.role==='content';
+  // Casey sees only her own board; admins see all three
+  const members = isContent ? ['Casey'] : ['Megan','Stacey','Casey'];
   const boards = document.getElementById('todo-boards');
   if(!boards) return;
-  // Save input values so they aren't cleared on re-render
+  // Save input values so they aren't cleared on re-render — but only if non-empty AND not just posted
   const savedInputs = {};
   members.forEach(m => {
     const el = document.getElementById('add-input-'+m);
-    if(el) savedInputs[m] = el.value;
+    if(el && el.dataset.justPosted !== '1') savedInputs[m] = el.value;
   });
   boards.innerHTML = members.map(m=>{
-    const mtodos = todos.filter(t=>(t.assignee===m)||(t.assignedTo===m));
+    // Casey only sees her own tasks; admins see all tasks for each member
+    const mtodos = isContent
+      ? todos.filter(t=>(t.assignee===m)||(t.assignedTo===m))
+      : todos.filter(t=>(t.assignee===m)||(t.assignedTo===m));
     const open = mtodos.filter(t=>!t.done);
     const done = mtodos.filter(t=>t.done);
     const sorted = [...open.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')),
                     ...done.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))];
+    const color = BOARD_COLORS[m]||'#DD0B82';
+    const pri = boardPriority[m]||'High';
     const color = BOARD_COLORS[m]||'#DD0B82';
     const pri = boardPriority[m]||'High';
     return `<div class="todo-board">
@@ -2452,12 +2459,19 @@ function renderTodoBoards(todos) {
           <div class="todo-item">
             <div class="todo-check${t.done?' checked':''}" onclick="toggleTodo('${t.id}',${!t.done},'${m}')">${t.done?'✓':''}</div>
             <div class="todo-item-body">
-              <div class="todo-text${t.done?' done':''}">${t.text}</div>
+              <div class="todo-text${t.done?' done':''}">
+                ${t.assignedBy==='Casey'&&m!=='Casey'?'<span style="font-size:10px;background:#fce4ec;color:#c62828;padding:1px 6px;border-radius:10px;font-weight:700;margin-right:4px">from Casey</span>':''}
+                ${t.text}
+              </div>
               <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
                 <div class="todo-priority-label priority-${(t.priority||'High').toLowerCase().replace('medium','med')}-label">${(t.priority||'High').toUpperCase()}</div>
-                ${t.assignedBy ? `<span style="font-size:10px;color:var(--gray3);font-style:italic">from ${t.assignedBy}</span>` : ''}
+                ${t.assignedBy&&t.assignedBy!=='Casey' ? `<span style="font-size:10px;color:var(--gray3);font-style:italic">from ${t.assignedBy}</span>` : ''}
               </div>
             </div>
+            <button onclick="openTodoModal('${t.id}')" title="Edit task"
+              style="flex-shrink:0;background:none;border:1.5px solid var(--gray2);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--gray3);line-height:1.4;transition:all .15s"
+              onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'"
+              onmouseout="this.style.borderColor='var(--gray2)';this.style.color='var(--gray3)'">✏️</button>
           </div>`).join('') : '<div style="padding:20px 0;color:var(--gray3);font-size:13px">No tasks yet.</div>'}
       </div>
       <div class="todo-board-footer">
@@ -2556,15 +2570,16 @@ window.quickAddTodo = async (member) => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  await addDoc(collection(db,'todos'), data);
+  // Mark as just posted so savedInputs doesn't restore the value
   input.value = '';
-  loadTodos();
+  input.dataset.justPosted = '1';
+  setTimeout(() => { if(input) input.dataset.justPosted = '0'; }, 500);
+  await addDoc(collection(db,'todos'), data);
   loadDashboard();
 };
 
 window.toggleTodo = async (id, done, member) => {
   await updateDoc(doc(db,'todos',id),{done, updatedAt:new Date().toISOString()});
-  loadTodos();
   loadDashboard();
 };
 
@@ -2597,7 +2612,6 @@ window.saveTodo = async () => {
   if(editingTodoId){await updateDoc(doc(db,'todos',editingTodoId),data);showToast('Task updated!');}
   else{data.createdAt=new Date().toISOString();await addDoc(collection(db,'todos'),data);showToast('Task added!');}
   closeModal('todo-modal');
-  loadTodos();
   loadDashboard();
 };
 
