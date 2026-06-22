@@ -2446,8 +2446,6 @@ function renderTodoBoards(todos) {
                     ...done.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))];
     const color = BOARD_COLORS[m]||'#DD0B82';
     const pri = boardPriority[m]||'High';
-    const color = BOARD_COLORS[m]||'#DD0B82';
-    const pri = boardPriority[m]||'High';
     return `<div class="todo-board">
       <div class="todo-board-header">
         <div class="todo-board-dot" style="background:${color}"></div>
