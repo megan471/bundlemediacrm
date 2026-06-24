@@ -2077,11 +2077,48 @@ async function renderCalendar() {
       const ev = document.createElement('div');
       ev.className = `cal-event ${evClass(e.type)}`;
       ev.textContent = e.title;
-      ev.onclick = (evt) => { evt.stopPropagation(); if(!e.id.startsWith('h-')) openEventModal(e.id); };
+      ev.onclick = (evt) => {
+        evt.stopPropagation();
+        if(currentUser.role==='content') {
+          showCalEventPopup(e, ev);
+        } else {
+          if(!e.id.startsWith('h-')&&!e.id.startsWith('aw-')) openEventModal(e.id);
+          else showCalEventPopup(e, ev);
+        }
+      };
       cell.appendChild(ev);
     });
     grid.appendChild(cell);
   }
+}
+
+function showCalEventPopup(e, anchor) {
+  // Remove any existing popup
+  const old = document.getElementById('cal-event-popup');
+  if(old) old.remove();
+  const popup = document.createElement('div');
+  popup.id = 'cal-event-popup';
+  popup.style.cssText = 'position:fixed;z-index:9999;background:var(--white);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:16px 18px;min-width:240px;max-width:320px;border:1.5px solid var(--gray2)';
+  const rect = anchor.getBoundingClientRect();
+  popup.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+      <div style="font-weight:700;font-size:14px;color:var(--dark);flex:1;padding-right:8px">${e.title||''}</div>
+      <button onclick="document.getElementById('cal-event-popup').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray3);line-height:1;flex-shrink:0">×</button>
+    </div>
+    ${e.date?`<div style="font-size:12px;color:var(--gray3);margin-bottom:6px">📅 ${new Date(e.date+'T00:00:00').toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}${e.startTime?` · ${e.startTime}`:''}${e.endTime?` – ${e.endTime}`:''}</div>`:''}
+    ${e.notes?`<div style="font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word;margin-bottom:8px">${linkifyText(e.notes)}</div>`:''}
+    ${e.link?`<a href="${e.link}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue);text-decoration:underline;word-break:break-all">🔗 ${e.link}</a>`:''}
+  `;
+  document.body.appendChild(popup);
+  // Position below the anchor, flip up if near bottom
+  const top = rect.bottom + 8;
+  const left = Math.min(rect.left, window.innerWidth - 340);
+  popup.style.top = (top + popup.offsetHeight > window.innerHeight ? rect.top - popup.offsetHeight - 8 : top) + 'px';
+  popup.style.left = Math.max(8, left) + 'px';
+  // Close on outside click
+  setTimeout(() => document.addEventListener('click', function h(ev) {
+    if(!popup.contains(ev.target)) { popup.remove(); document.removeEventListener('click', h); }
+  }), 50);
 }
 
 function evClass(type){return{meeting:'ev-blue',deadline:'ev-black',office:'ev-purple',holiday:'ev-yellow',birthday:'ev-pink',other:'ev-blue'}[type]||'ev-blue';}
@@ -2463,6 +2500,7 @@ function renderTodoBoards(todos) {
               </div>
               <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
                 <div class="todo-priority-label priority-${(t.priority||'High').toLowerCase().replace('medium','med')}-label">${(t.priority||'High').toUpperCase()}</div>
+                ${t.clientName?`<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 7px;border-radius:10px;font-weight:600">${t.clientName}</span>`:''}
                 ${t.assignedBy&&t.assignedBy!=='Casey' ? `<span style="font-size:10px;color:var(--gray3);font-style:italic">from ${t.assignedBy}</span>` : ''}
               </div>
             </div>
@@ -2478,6 +2516,12 @@ function renderTodoBoards(todos) {
             value="${savedInputs[m]||''}"
             onkeydown="if(event.key==='Enter')quickAddTodo('${m}')">
           <button class="todo-add-btn" onclick="quickAddTodo('${m}')">+</button>
+        </div>
+        <div style="padding:0 12px 6px">
+          <select id="add-client-${m}" style="width:100%;font-size:11px;padding:4px 8px;border:1.5px solid var(--gray2);border-radius:6px;font-family:'Poppins',sans-serif;color:var(--gray3);background:var(--white);outline:none">
+            <option value="">No client</option>
+            ${allClients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}
+          </select>
         </div>
         <div class="todo-priority-row">
           <button class="priority-toggle${pri==='High'?' active-high':''}" onclick="setBoardPriority('${m}','High',this)">HIGH</button>
@@ -2559,19 +2603,25 @@ window.quickAddTodo = async (member) => {
   const input = document.getElementById('add-input-'+member);
   const text = input.value.trim();
   if(!text) return;
+  const clientId = document.getElementById('add-client-'+member)?.value || '';
+  const clientName = clientId ? (allClients.find(c=>c.id===clientId)?.name||'') : '';
   const data = {
     text,
     assignee: member,
     assignedTo: member,
     priority: boardPriority[member]||'High',
     done: false,
+    clientId,
+    clientName,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  // Mark as just posted so savedInputs doesn't restore the value
   input.value = '';
   input.dataset.justPosted = '1';
   setTimeout(() => { if(input) input.dataset.justPosted = '0'; }, 500);
+  // Reset client selector
+  const clientSel = document.getElementById('add-client-'+member);
+  if(clientSel) clientSel.value = '';
   await addDoc(collection(db,'todos'), data);
   loadDashboard();
 };
@@ -3379,7 +3429,15 @@ async function loadBriefing() {
   const briefs = snap.docs.map(d=>({id:d.id,...d.data()}))
     .filter(b=> normaliseMonth(b.month) === month);
 
-  grid.innerHTML = allClients.map(c=>{
+  const statusOrder = {'In Progress':0,'Not Started':1,'Submitted':2};
+  const sortedClients = [...allClients].sort((a,b)=>{
+    const bA = briefs.find(x=>x.clientId===a.id)||{};
+    const bB = briefs.find(x=>x.clientId===b.id)||{};
+    const sA = statusOrder[bA.status||'Not Started']??1;
+    const sB = statusOrder[bB.status||'Not Started']??1;
+    return sA - sB;
+  });
+  grid.innerHTML = sortedClients.map(c=>{
     const b = briefs.find(x=>x.clientId===c.id)||{};
     const status = b.status||'Not Started';
     const statusCls = {'Not Started':'brief-not-started','In Progress':'brief-in-progress','Submitted':'brief-submitted'}[status]||'brief-not-started';
@@ -3424,11 +3482,15 @@ async function loadBriefing() {
         <!-- Posted notes thread -->
         <div id="brief-thread-${c.id}">
           ${(b.notes&&b.notes.length) ? b.notes.map((n,ni)=>`
-            <div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative;overflow:hidden">
+            <div style="background:${n.done?'#f0f0f0':'var(--gray)'};border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative;overflow:hidden;transition:background .2s">
               <div style="font-size:11px;font-weight:700;color:var(--pink);margin-bottom:4px">${n.author} &middot; ${n.time}</div>
-              <div style="font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word">${linkifyText(n.text)}</div>
-              <button onclick="deleteBriefNote('${c.id}','${month}','${b.id||''}',${ni})"
-                style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--gray3);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;line-height:1" title="Delete">✕</button>
+              <div style="font-size:13px;color:${n.done?'var(--gray3)':'var(--text)'};white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;text-decoration:${n.done?'line-through':'none'}">${linkifyText(n.text)}</div>
+              <div style="position:absolute;top:6px;right:6px;display:flex;gap:4px">
+                <button onclick="toggleBriefNote('${c.id}','${month}','${b.id||''}',${ni},${!n.done})"
+                  style="background:${n.done?'#c8e6c9':'none'};border:1.5px solid ${n.done?'#66bb6a':'var(--gray2)'};color:${n.done?'#2e7d32':'var(--gray3)'};cursor:pointer;font-size:11px;padding:1px 6px;border-radius:4px;line-height:1.4" title="${n.done?'Mark undone':'Mark done'}">✓</button>
+                <button onclick="deleteBriefNote('${c.id}','${month}','${b.id||''}',${ni})"
+                  style="background:none;border:none;color:var(--gray3);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;line-height:1" title="Delete">✕</button>
+              </div>
             </div>`).join('') : '<div style="font-size:12px;color:var(--gray3);padding:4px 0 8px">No notes posted yet.</div>'}
         </div>
         ${b.clientNotes ? `
@@ -3456,9 +3518,9 @@ async function loadBriefing() {
 
 window.updateBriefStatus = async (clientId, month, briefId, selectEl) => {
   const status = selectEl.value;
-  // Update button colour
   selectEl.className = 'brief-status-select ' + ({'Not Started':'brief-not-started','In Progress':'brief-in-progress','Submitted':'brief-submitted'}[status]||'brief-not-started');
   await saveBriefInline(clientId, month, briefId);
+  setTimeout(() => loadBriefing(), 400);
 };
 
 window.postBriefNote = async (clientId, month, briefId) => {
@@ -3509,6 +3571,16 @@ window.postBriefNote = async (clientId, month, briefId) => {
     thread.appendChild(noteEl);
   }
   showToast('Note posted!');
+};
+
+window.toggleBriefNote = async (clientId, month, briefId, noteIndex, done) => {
+  if(!briefId) return;
+  const snap = await getDoc(doc(db,'briefs',briefId));
+  if(!snap.exists()) return;
+  const notes = snap.data().notes || [];
+  if(notes[noteIndex]) notes[noteIndex].done = done;
+  await updateDoc(doc(db,'briefs',briefId), {notes, updatedAt:new Date().toISOString()});
+  loadBriefing();
 };
 
 window.deleteBriefNote = async (clientId, month, briefId, noteIndex) => {
