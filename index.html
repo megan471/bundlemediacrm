@@ -4575,23 +4575,37 @@ const DEFAULT_CLIENTS = [
 async function seedClientsIfEmpty() {
   try {
     const snap = await getDocs(collection(db,'clients'));
-    if(snap.size >= 17) {
-      console.log('Clients already seeded:', snap.size);
-      return;
+    const existing = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+    // Clients that should NOT exist — remove them
+    const removeNames = ['cResults','UNDP','Nurturing Nannies'];
+    for(const d of snap.docs) {
+      if(removeNames.includes(d.data().name)) {
+        await deleteDoc(doc(db,'clients',d.id));
+        console.log('Removed client:', d.data().name);
+      }
     }
-    console.log('Seeding clients... found', snap.size, 'existing');
-    // Clear any partial data
-    for(const d of snap.docs) await deleteDoc(doc(db,'clients',d.id));
-    // Write all 17
-    for(const c of DEFAULT_CLIENTS){
-      await addDoc(collection(db,'clients'),{...c, createdAt:new Date().toISOString()});
+
+    // Check which DEFAULT_CLIENTS are missing and add them
+    const existingNames = existing.map(c=>c.name);
+    for(const c of DEFAULT_CLIENTS) {
+      if(!existingNames.includes(c.name)) {
+        await addDoc(collection(db,'clients'),{...c, createdAt:new Date().toISOString()});
+        console.log('Added missing client:', c.name);
+      }
     }
-    console.log('Seeded 17 clients OK');
-    // Reload clients after seed
+
+    // If completely empty, seed all
+    if(snap.size === 0) {
+      for(const c of DEFAULT_CLIENTS) {
+        await addDoc(collection(db,'clients'),{...c, createdAt:new Date().toISOString()});
+      }
+      console.log('Seeded all clients');
+    }
+
     await loadClients();
   } catch(e) {
     console.error('Seed failed:', e.message);
-    // If Firestore is locked down, show clients from defaults in memory so UI is not empty
     allClients = DEFAULT_CLIENTS.map((c,i)=>({id:'default-'+i,...c}));
     renderClientsGrid(allClients);
     populateClientSelects();
