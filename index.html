@@ -2738,7 +2738,9 @@ async function loadTracker() {
   const wrap = document.getElementById('tracker-table-wrap');
   wrap.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
 
-  // Load all tracker docs for this month
+  // Exclude UNDP from tracker (not a monthly client)
+  const trackerClients = allClients.filter(c => c.name !== 'UNDP');
+
   const snap = await getDocs(query(collection(db,'tracker'), where('month','==',month)));
   const trackerData = {};
   snap.docs.forEach(d => { trackerData[d.data().clientId] = {docId:d.id, ...d.data()}; });
@@ -2749,73 +2751,72 @@ async function loadTracker() {
   };
 
   // Stats
-  let totalDesignDone=0, totalScheduledDone=0, totalManual=0;
-  allClients.forEach(c => {
+  let totalDesignDone=0, totalFbIgDone=0, totalLinkedInDone=0, totalBlockDone=0, totalManual=0;
+  trackerClients.forEach(c => {
     const t = trackerData[c.id] || {};
     if(t.designDone) totalDesignDone++;
-    if(t.scheduledDone) totalScheduledDone++;
+    if(t.fbIgDone) totalFbIgDone++;
+    if(t.linkedInDone) totalLinkedInDone++;
+    if(t.blockDone) totalBlockDone++;
     if(t.manualPost) totalManual++;
   });
+  const n = trackerClients.length;
 
   const statsHtml = `<div class="tracker-stats">
-    <div class="tracker-stat-pill">Designs done: <span>${totalDesignDone}/${allClients.length}</span></div>
-    <div class="tracker-stat-pill">Scheduling done: <span>${totalScheduledDone}/${allClients.length}</span></div>
-    <div class="tracker-stat-pill">Manual post: <span style="color:#e65100">${totalManual}</span></div>
-    <div class="tracker-stat-pill">Outstanding: <span>${allClients.length - totalScheduledDone - totalManual}</span></div>
+    <div class="tracker-stat-pill">🎨 Designs: <span>${totalDesignDone}/${n}</span></div>
+    <div class="tracker-stat-pill">📘 FB+IG: <span>${totalFbIgDone}/${n}</span></div>
+    <div class="tracker-stat-pill">💼 LinkedIn: <span>${totalLinkedInDone}/${n}</span></div>
+    <div class="tracker-stat-pill">📦 Block: <span>${totalBlockDone}/${n}</span></div>
+    <div class="tracker-stat-pill">⚠️ Manual: <span style="color:#e65100">${totalManual}</span></div>
   </div>`;
 
   const legendHtml = `<div class="tracker-legend">
     <div class="legend-item"><div class="legend-dot legend-done">✓</div> Done</div>
-    <div class="legend-item"><div class="legend-dot legend-manual">M</div> Manual post required</div>
+    <div class="legend-item"><div class="legend-dot legend-manual">M</div> Manual post</div>
     <div class="legend-item"><div class="legend-dot legend-pending"></div> Outstanding</div>
   </div>`;
 
-  const rows = allClients.map(c => {
+  const rows = trackerClients.map(c => {
     const t = trackerData[c.id] || {};
     const platforms = (c.platforms||[]).map(p =>
       `<span class="tracker-platform-dot" style="background:${platformColors[p]||'#999'}" title="${p}"></span>`
     ).join('');
 
-    // Progress bar — count how many of the 3 main steps are done
-    const steps = [t.designDone, t.scheduledDone||t.manualPost].filter(Boolean).length;
-    const pct = Math.round((steps / 2) * 100);
+    // Progress: designs + fbIg + linkedIn + block = 4 steps
+    const steps = [t.designDone, t.captionsDone, t.fbIgDone||t.manualPost, t.linkedInDone, t.blockDone].filter(Boolean).length;
+    const pct = Math.round((steps / 5) * 100);
+
+    // Scheduled: FB+IG column cycles: empty → done → manual → empty
+    const fbIgState = t.manualPost ? 'manual' : t.fbIgDone ? 'done' : '';
+    const fbIgLabel = t.manualPost ? 'M' : t.fbIgDone ? '✓' : '';
 
     return `<tr>
-      <td style="min-width:180px">
+      <td style="min-width:170px">
         <div class="tracker-client-name">${c.name}</div>
         <div class="tracker-platforms">${platforms}</div>
         <div class="tracker-progress"><div class="tracker-progress-bar" style="width:${pct}%"></div></div>
       </td>
       <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.designDone?' done':''}"
-          onclick="cycleTrackerField('${c.id}','${month}','designDone',${!!t.designDone})">
-          ${t.designDone?'✓':''}
+        <div class="tracker-checkbox${t.designDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','designDone',${!!t.designDone})">${t.designDone?'✓':''}</div>
+      </td>
+      <td class="tracker-check-cell">
+        <div class="tracker-checkbox${t.captionsDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','captionsDone',${!!t.captionsDone})">${t.captionsDone?'✓':''}</div>
+      </td>
+      <td class="tracker-check-cell">
+        <div class="tracker-checkbox${fbIgState?' '+fbIgState:''}"
+          title="${t.manualPost?'Manual post':t.fbIgDone?'FB+IG scheduled':'Not done'}"
+          onclick="cycleFbIg('${c.id}','${month}',${!!t.fbIgDone},${!!t.manualPost})">
+          ${fbIgLabel}
         </div>
       </td>
       <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.captionsDone?' done':''}"
-          onclick="cycleTrackerField('${c.id}','${month}','captionsDone',${!!t.captionsDone})">
-          ${t.captionsDone?'✓':''}
-        </div>
+        <div class="tracker-checkbox${t.linkedInDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','linkedInDone',${!!t.linkedInDone})">${t.linkedInDone?'✓':''}</div>
       </td>
       <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.scheduledDone?' done':t.manualPost?' manual':''}"
-          title="${t.manualPost?'Manual post required':t.scheduledDone?'Scheduled':'Not done yet'}"
-          onclick="cycleScheduled('${c.id}','${month}',${!!t.scheduledDone},${!!t.manualPost})">
-          ${t.scheduledDone?'✓':t.manualPost?'M':''}
-        </div>
+        <div class="tracker-checkbox${t.blockDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','blockDone',${!!t.blockDone})">${t.blockDone?'✓':''}</div>
       </td>
       <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.assetsUploaded?' done':''}"
-          onclick="cycleTrackerField('${c.id}','${month}','assetsUploaded',${!!t.assetsUploaded})">
-          ${t.assetsUploaded?'✓':''}
-        </div>
-      </td>
-      <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.reportDone?' done':''}"
-          onclick="cycleTrackerField('${c.id}','${month}','reportDone',${!!t.reportDone})">
-          ${t.reportDone?'✓':''}
-        </div>
+        <div class="tracker-checkbox${t.reportDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','reportDone',${!!t.reportDone})">${t.reportDone?'✓':''}</div>
       </td>
       <td>
         <input class="tracker-notes-input" type="text" placeholder="Notes..."
@@ -2834,8 +2835,9 @@ async function loadTracker() {
           <th>Client</th>
           <th class="center">🎨 Designs</th>
           <th class="center">✍️ Captions</th>
-          <th class="center">📅 Scheduled</th>
-          <th class="center">📁 Assets</th>
+          <th class="center">📘 FB + IG</th>
+          <th class="center">💼 LinkedIn</th>
+          <th class="center">📦 Block</th>
           <th class="center">📊 Report</th>
           <th>📝 Notes</th>
         </tr>
@@ -2845,6 +2847,23 @@ async function loadTracker() {
     </div>`;
 }
 
+window.cycleFbIg = async (clientId, month, fbIgDone, manualPost) => {
+  // Cycle: empty → scheduled done → manual → empty
+  let newFbIg = false, newManual = false;
+  if(!fbIgDone && !manualPost) { newFbIg = true; }
+  else if(fbIgDone) { newFbIg = false; newManual = true; }
+  // else manualPost → reset both
+  const snap = await getDocs(query(collection(db,'tracker'),
+    where('clientId','==',clientId), where('month','==',month)));
+  const data = {fbIgDone:newFbIg, manualPost:newManual, updatedAt:new Date().toISOString()};
+  if(snap.empty) {
+    await addDoc(collection(db,'tracker'),{clientId, month, ...data, createdAt:new Date().toISOString()});
+  } else {
+    await updateDoc(doc(db,'tracker',snap.docs[0].id), data);
+  }
+  loadTracker();
+};
+
 window.cycleTrackerField = async (clientId, month, field, currentVal) => {
   const newVal = !currentVal;
   const snap = await getDocs(query(collection(db,'tracker'),
@@ -2853,23 +2872,6 @@ window.cycleTrackerField = async (clientId, month, field, currentVal) => {
     await addDoc(collection(db,'tracker'),{clientId, month, [field]:newVal, createdAt:new Date().toISOString()});
   } else {
     await updateDoc(doc(db,'tracker',snap.docs[0].id),{[field]:newVal, updatedAt:new Date().toISOString()});
-  }
-  loadTracker();
-};
-
-window.cycleScheduled = async (clientId, month, scheduledDone, manualPost) => {
-  // Cycle: empty → scheduled done → manual → empty
-  let newScheduled = false, newManual = false;
-  if(!scheduledDone && !manualPost) { newScheduled = true; }
-  else if(scheduledDone) { newScheduled = false; newManual = true; }
-  else { newScheduled = false; newManual = false; }
-
-  const snap = await getDocs(query(collection(db,'tracker'),
-    where('clientId','==',clientId), where('month','==',month)));
-  if(snap.empty) {
-    await addDoc(collection(db,'tracker'),{clientId, month, scheduledDone:newScheduled, manualPost:newManual, createdAt:new Date().toISOString()});
-  } else {
-    await updateDoc(doc(db,'tracker',snap.docs[0].id),{scheduledDone:newScheduled, manualPost:newManual, updatedAt:new Date().toISOString()});
   }
   loadTracker();
 };
@@ -3571,7 +3573,8 @@ async function loadBriefing() {
 window.updateBriefStatus = async (clientId, month, briefId, selectEl) => {
   const status = selectEl.value;
   selectEl.className = 'brief-status-select ' + ({'Not Started':'brief-not-started','In Progress':'brief-in-progress','Submitted':'brief-submitted'}[status]||'brief-not-started');
-  await saveBriefInline(clientId, month, briefId);
+  await saveBriefNow(clientId, month, briefId, status);
+  showToast('Status saved: ' + status + ' ✅');
   setTimeout(() => loadBriefing(), 400);
 };
 
@@ -3602,9 +3605,13 @@ window.postBriefNote = async (clientId, month, briefId) => {
       ...data, notes:[newNote], createdAt:new Date().toISOString()
     });
     briefId = newDoc.id;
-    // Update button with new doc id
-    const btn = notesEl.closest('.brief-card-body').querySelector('button[onclick*="postBriefNote"]');
-    if(btn) btn.setAttribute('onclick', `postBriefNote('${clientId}','${month}','${briefId}')`);
+    // Update ALL onclick attrs on this card to use the new doc id
+    document.querySelectorAll('[onclick]').forEach(el => {
+      const oc = el.getAttribute('onclick') || '';
+      if(oc.includes("'"+clientId+"'") && oc.includes("'"+month+"'") && oc.includes("''")) {
+        el.setAttribute('onclick', oc.replaceAll(",'"+month+"',''", ",'"+month+"','"+briefId+"'"));
+      }
+    });
   }
   notesEl.value = '';
   // Append note to thread immediately without full reload
@@ -3667,10 +3674,25 @@ window.deleteBriefNote = async (clientId, month, briefId, noteIndex) => {
 };
 
 // Status change still saves
-window.saveBriefNow = async (clientId, month, briefId) => {
+window.saveBriefNow = async (clientId, month, briefId, status) => {
   const statusEl = document.getElementById('brief-status-'+clientId);
-  if(!statusEl || !briefId) return;
-  await updateDoc(doc(db,'briefs',briefId), {status:statusEl.value, updatedAt:new Date().toISOString()});
+  const statusVal = status || statusEl?.value || 'Not Started';
+  if(briefId) {
+    await updateDoc(doc(db,'briefs',briefId), {status:statusVal, updatedAt:new Date().toISOString()});
+  } else {
+    // No doc yet for this month — create one so status persists
+    const newRef = await addDoc(collection(db,'briefs'), {
+      clientId, month, status:statusVal,
+      notes:[], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()
+    });
+    // Patch onclick attributes on the page so subsequent saves use the new id
+    document.querySelectorAll('[onclick]').forEach(el => {
+      const oc = el.getAttribute('onclick') || '';
+      if(oc.includes("'"+clientId+"'") && oc.includes("'"+month+"'") && oc.includes("''")) {
+        el.setAttribute('onclick', oc.replaceAll(",'"+month+"',''", ",'"+month+"','"+newRef.id+"'"));
+      }
+    });
+  }
 };
 window.saveBriefInline = window.saveBriefNow;
 
@@ -4548,7 +4570,6 @@ const DEFAULT_CLIENTS = [
   {name:'Nosihle Msomi Foundation',platforms:['Facebook','Instagram','LinkedIn'],color:'#E76F51',singles:4,carousels:4,reels:4,stories:8},
   {name:'Cool Breeze',platforms:['Facebook','Instagram','LinkedIn'],color:'#023E8A',singles:4,carousels:4,reels:4,stories:8},
   {name:'Starry Starry Night',platforms:['Facebook','Instagram'],color:'#1B1464',singles:4,carousels:4,reels:4,stories:8},
-  {name:'UNDP',platforms:['Facebook','Instagram','LinkedIn','TikTok','YouTube'],color:'#009EDB',singles:4,carousels:4,reels:4,stories:8},
   {name:'Hello Hair Fourways',platforms:['Instagram','Facebook','TikTok'],color:'#1a1a1a',singles:4,carousels:4,reels:4,stories:0},
   {name:'Hole In The Wall',platforms:['Facebook','Instagram'],color:'#7B3F00',singles:4,carousels:4,reels:4,stories:8},
 ];
