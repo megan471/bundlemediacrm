@@ -674,6 +674,25 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         <div class="todo-boards" id="todo-boards" style="flex:1;min-height:0;margin:0;border-radius:0;border:none;border-top:none">
           <div class="loading"><div class="spinner"></div>Loading tasks...</div>
         </div>
+        <!-- Urgent Notes — admin only -->
+        <div id="urgent-notes-panel" style="flex-shrink:0;background:#fff3e0;border-top:3px solid #DD0B82;padding:12px 20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">🔴</span>
+              <span style="font-weight:800;font-size:14px;color:#c4076e;letter-spacing:0.5px;text-transform:uppercase">Urgent Notes</span>
+            </div>
+            <button onclick="toggleUrgentNotes()" style="background:none;border:none;font-size:12px;color:var(--gray3);cursor:pointer;padding:2px 8px;border-radius:4px;border:1px solid var(--gray2)">▲ Hide</button>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <textarea id="urgent-notes-text" placeholder="Type urgent notes here — visible to Megan & Stacey only. Auto-saves as you type..."
+              style="flex:1;min-height:60px;max-height:120px;padding:10px 12px;border:2px solid #DD0B82;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;resize:vertical;background:#fff;color:var(--text);line-height:1.5"
+              oninput="scheduleUrgentNotesSave()"></textarea>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+            <span id="urgent-notes-status" style="font-size:11px;color:var(--gray3);font-style:italic"></span>
+            <span style="font-size:11px;color:var(--gray3)">Only visible to Megan & Stacey</span>
+          </div>
+        </div>
       </div>
 
       <!-- ── REPORTS ── -->
@@ -1714,6 +1733,13 @@ async function startAgencyApp() {
   loadDashboard();
   renderCalendar();
   await populateMonthSelectors();
+  // Hide urgent notes panel for Casey
+  if(currentUser.role === 'content') {
+    const p = document.getElementById('urgent-notes-panel');
+    if(p) p.style.display = 'none';
+  } else {
+    loadUrgentNotes();
+  }
 }
 
 // ── CLIENTS ──
@@ -2674,6 +2700,62 @@ window.quickAddTodo = async (member) => {
 };
 
 window.addTodoModal = () => openTodoModal(null);
+
+// ── URGENT NOTES ──
+let urgentNotesSaveTimer = null;
+
+function showUrgentNotesPanel() {
+  const panel = document.getElementById('urgent-notes-panel');
+  if(!panel) return;
+  if(currentUser?.role === 'content') {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = '';
+  loadUrgentNotes();
+}
+
+async function loadUrgentNotes() {
+  try {
+    const snap = await getDoc(doc(db,'settings','urgentNotes'));
+    if(snap.exists()) {
+      document.getElementById('urgent-notes-text').value = snap.data().text || '';
+    }
+    document.getElementById('urgent-notes-status').textContent = '';
+  } catch(e) { /* silent */ }
+}
+
+window.scheduleUrgentNotesSave = () => {
+  const status = document.getElementById('urgent-notes-status');
+  if(status) status.textContent = 'Saving...';
+  clearTimeout(urgentNotesSaveTimer);
+  urgentNotesSaveTimer = setTimeout(async () => {
+    try {
+      const text = document.getElementById('urgent-notes-text')?.value || '';
+      await setDoc(doc(db,'settings','urgentNotes'), {
+        text, updatedAt: new Date().toISOString(), updatedBy: currentUser?.name||'Admin'
+      });
+      if(status) status.textContent = 'Saved ✓';
+      setTimeout(() => { if(status) status.textContent = ''; }, 2000);
+    } catch(e) {
+      if(status) status.textContent = 'Save failed';
+    }
+  }, 800);
+};
+
+window.toggleUrgentNotes = () => {
+  const panel = document.getElementById('urgent-notes-panel');
+  const btn = panel?.querySelector('button');
+  const textarea = document.getElementById('urgent-notes-text');
+  if(!panel) return;
+  if(textarea.style.display === 'none') {
+    textarea.style.display = '';
+    if(btn) btn.textContent = '▲ Hide';
+  } else {
+    textarea.style.display = 'none';
+    if(btn) btn.textContent = '▼ Show';
+  }
+};
 
 window.toggleTodo = async (id, done, member) => {
   await updateDoc(doc(db,'todos',id),{done, updatedAt:new Date().toISOString()});
@@ -3998,7 +4080,7 @@ window.showPage = (page) => {
     if(n.textContent.toLowerCase().includes(page.replace('-',' '))) n.classList.add('active');
   });
   if(page==='content') loadKanban();
-  if(page==='todos') loadTodos();
+  if(page==='todos') { loadTodos(); showUrgentNotesPanel(); }
   if(page==='briefing') loadBriefing();
   if(page==='reports') { loadReports(); checkMetaStatus(); }
   if(page==='settings') { loadPinList(); loadGoogleApiSettings(); }
