@@ -2814,17 +2814,34 @@ window.deleteTodo = async () => {
 };
 
 // ── MONTHLY TRACKER ──
+// Global month normaliser — converts "July 2026" → "2026-07", leaves "2026-07" unchanged
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function normMonth(m) {
+  if(!m) return '';
+  if(/^\d{4}-\d{2}$/.test(m)) return m;
+  const parts = m.split(' ');
+  const mi = MONTH_NAMES.indexOf(parts[0]);
+  if(mi>=0 && parts[1]) return `${parts[1]}-${String(mi+1).padStart(2,'0')}`;
+  return m;
+}
+
 async function loadTracker() {
-  const month = document.getElementById('tracker-month').value;
+  const month = document.getElementById('tracker-month').value; // YYYY-MM
   const wrap = document.getElementById('tracker-table-wrap');
   wrap.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
 
   // Exclude UNDP from tracker (not a monthly client)
   const trackerClients = allClients.filter(c => c.name !== 'UNDP');
 
-  const snap = await getDocs(query(collection(db,'tracker'), where('month','==',month)));
+  // Fetch ALL tracker docs and filter by normalised month to handle old "July 2026" format
+  const allSnap = await getDocs(collection(db,'tracker'));
   const trackerData = {};
-  snap.docs.forEach(d => { trackerData[d.data().clientId] = {docId:d.id, ...d.data()}; });
+  allSnap.docs.forEach(d => {
+    const data = d.data();
+    if(normMonth(data.month) === month) {
+      trackerData[data.clientId] = {docId:d.id, ...data};
+    }
+  });
 
   const platformColors = {
     Instagram:'#c2185b', Facebook:'#1565c0', LinkedIn:'#2e7d32',
@@ -2947,12 +2964,17 @@ window.cycleFbIg = async (clientId, month, fbIgDone, manualPost) => {
 
 window.cycleTrackerField = async (clientId, month, field, currentVal) => {
   const newVal = !currentVal;
-  const snap = await getDocs(query(collection(db,'tracker'),
-    where('clientId','==',clientId), where('month','==',month)));
-  if(snap.empty) {
+  // Always save month in YYYY-MM format
+  const allSnap = await getDocs(query(collection(db,'tracker'),
+    where('clientId','==',clientId)));
+  const existing = allSnap.docs.find(d => {
+    const m = d.data().month||'';
+    return m === month || (m.includes(' ') && normMonth(m) === month);
+  });
+  if(!existing) {
     await addDoc(collection(db,'tracker'),{clientId, month, [field]:newVal, createdAt:new Date().toISOString()});
   } else {
-    await updateDoc(doc(db,'tracker',snap.docs[0].id),{[field]:newVal, updatedAt:new Date().toISOString()});
+    await updateDoc(doc(db,'tracker',existing.id),{[field]:newVal, month, updatedAt:new Date().toISOString()});
   }
   loadTracker();
 };
