@@ -161,8 +161,9 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 
 /* ── TODOS ── */
 .todo-boards{display:grid;grid-template-columns:repeat(3,1fr);gap:0;height:100%;overflow:hidden}
-.todo-board-main{background:var(--cream);border-radius:0;overflow:hidden;height:420px;display:flex;flex-direction:column;border-bottom:2px solid var(--gray2)}
-.todo-board-main .todo-board{border-right:none;height:100%}
+.todo-board-main{background:var(--cream);border-bottom:2px solid var(--gray2)}
+.todo-board-main .todo-board{border-right:none}
+.todo-board-main .todo-board-scroll{overflow-y:visible;max-height:none;min-height:280px}
 .todo-boards-embedded{height:600px}
 .checklist-tick{padding:6px 12px;border-radius:20px;border:2px solid var(--gray2);background:var(--white);font-size:11px;font-weight:700;color:var(--gray3);cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif}
 .checklist-tick.done{background:#e8f5e9;border-color:#43a047;color:#2e7d32}
@@ -1839,7 +1840,7 @@ const TODO_CATS = [
   { id:'website',  label:'Website',         icon:'🌐', bg:'#f0f4ff', border:'#5b7fe8', text:'#1a3ab5' },
 ];
 
-function buildBoardHtml(cat, catTodos, pri, assignOptions, savedInputs, savedAssignees, savedClients) {
+function buildBoardHtml(cat, catTodos, pri, assignOptions, savedInputs, savedAssignees, savedClients, showHeading=true) {
   const open = catTodos.filter(t=>!t.done);
   const done = catTodos.filter(t=>t.done);
   const sorted = [...open.sort((a,b)=>{ const p={High:0,Medium:1,Med:1,Low:2}; return (p[a.priority||'High']||0)-(p[b.priority||'High']||0); }), ...done];
@@ -1870,8 +1871,8 @@ function buildBoardHtml(cat, catTodos, pri, assignOptions, savedInputs, savedAss
 
   return `<div class="todo-board">
     <div class="todo-board-header" style="border-left:4px solid ${cat.border}">
-      <span style="font-size:16px;margin-right:6px">${cat.icon}</span>
-      <span class="todo-board-name" style="font-size:17px">${cat.label}</span>
+      ${showHeading ? `<span style="font-size:16px;margin-right:6px">${cat.icon}</span>
+      <span class="todo-board-name" style="font-size:17px">${cat.label}</span>` : ''}
       <div class="todo-board-meta">
         <span>${open.length} open · ${done.length} done</span>
         <div style="flex:1;max-width:80px;height:4px;background:var(--gray2);border-radius:4px;overflow:hidden">
@@ -1926,7 +1927,7 @@ function renderTodoBoards(todos) {
 
   const catTodosFor = (cat) => visibleTodos.filter(t => (t.category||'retainer') === cat.id);
 
-  mainEl.innerHTML = buildBoardHtml(mainCat, catTodosFor(mainCat), catPriority[mainCat.id]||'High', assignOptions, savedInputs, savedAssignees, savedClients);
+  mainEl.innerHTML = buildBoardHtml(mainCat, catTodosFor(mainCat), catPriority[mainCat.id]||'High', assignOptions, savedInputs, savedAssignees, savedClients, false);
   subEl.innerHTML = subCats.map(cat =>
     buildBoardHtml(cat, catTodosFor(cat), catPriority[cat.id]||'High', assignOptions, savedInputs, savedAssignees, savedClients)
   ).join('');
