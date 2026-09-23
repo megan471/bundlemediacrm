@@ -221,13 +221,19 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .metric-value{font-size:24px;font-weight:800;margin-top:4px;color:var(--text)}
 
 /* ── BRIEFING ── */
-.brief-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;width:100%}
-.brief-card{background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:all .2s;display:flex;flex-direction:column}
-.brief-card:hover{box-shadow:var(--shadow-lg)}
-.brief-card-header{padding:16px 16px 12px;display:flex;align-items:center;gap:12px}
-.brief-logo-placeholder{width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.25);border:2px dashed rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:rgba(255,255,255,0.9);flex-shrink:0}
-.brief-card-header-text{flex:1;min-width:0}
-.brief-card-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.brief-table-wrap{width:100%;overflow-x:auto;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow)}
+.brief-table{width:100%;border-collapse:collapse;font-size:13px}
+.brief-table thead th{background:var(--black);color:var(--white);padding:12px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.brief-row{cursor:pointer;transition:background .15s}
+.brief-row:hover{background:var(--gray)}
+.brief-row td{padding:10px 14px;border-bottom:1px solid var(--gray2);vertical-align:middle}
+.brief-row-logo{width:36px;height:36px;border-radius:8px;object-fit:contain;background:var(--gray);flex-shrink:0}
+.brief-row-logo-placeholder{display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
+.brief-row-platform{font-size:9px;background:var(--gray);color:var(--gray3);padding:1px 7px;border-radius:20px;font-weight:600}
+.brief-expand-btn{background:none;border:1.5px solid var(--gray2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--gray3);cursor:pointer;white-space:nowrap;font-family:"Poppins",sans-serif}
+.brief-expand-btn:hover{border-color:var(--pink);color:var(--pink)}
+.brief-row-detail td{padding:0;border-bottom:1px solid var(--gray2)}
+.brief-detail-body{padding:14px 20px 18px;background:var(--cream)}
 .brief-status-select{padding:4px 10px;border-radius:50px;font-size:12px;font-weight:700;border:none;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;text-align:center}
 .brief-not-started{background:var(--gray);color:var(--gray3)}
 .brief-in-progress{background:var(--yellow-light);color:#b8a600}
@@ -236,8 +242,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .brief-textarea{width:100%;border:1.5px solid var(--gray2);border-radius:8px;padding:10px 12px;font-size:13px;font-family:"Poppins",sans-serif;resize:vertical;min-height:72px;outline:none;color:var(--text);transition:border-color .2s;background:var(--white)}
 .brief-textarea:focus{border-color:var(--pink)}
 .brief-client-notes-box{background:var(--gray);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--gray3);min-height:48px;font-style:italic}
-.brief-save-btn{align-self:flex-end;padding:6px 16px;background:var(--pink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s;font-family:"Poppins",sans-serif}
-.brief-save-btn:hover{background:#c4076e}
 
 /* ── SETTINGS ── */
 .settings-section{background:var(--white);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
@@ -553,8 +557,21 @@ input,textarea,select{font-family:'Poppins',sans-serif}
             <select id="brief-month" onchange="loadBriefing()"></select>
           </div>
         </div>
-        <div class="brief-grid" id="brief-grid">
-          <div class="loading"><div class="spinner"></div>Loading briefs...</div>
+        <div class="brief-table-wrap">
+          <table class="brief-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Status</th>
+                <th>Drive Link</th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="brief-grid">
+              <tr><td colspan="5"><div class="loading"><div class="spinner"></div>Loading briefs...</div></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -2299,80 +2316,107 @@ async function loadBriefing() {
     const b = briefs.find(x=>x.clientId===c.id)||{};
     const status = b.status||'Not Started';
     const statusCls = {'Not Started':'brief-not-started','In Progress':'brief-in-progress','Submitted':'brief-submitted'}[status]||'brief-not-started';
-    const color = c.color||'#DD0B82';
-    // Lighten the color for bg — use the client color with opacity
-    const platforms = (c.platforms||[]).map(p=>`<span style="font-size:10px;background:rgba(255,255,255,0.25);padding:2px 8px;border-radius:50px;font-weight:600;color:rgba(255,255,255,0.9)">${p}</span>`).join('');
-    return `<div class="brief-card">
-      <!-- Coloured header with logo placeholder -->
-      <div class="brief-card-header" style="background:${color}">
-        ${getClientLogo(c.name)
-          ? `<img src="${getClientLogo(c.name)}" style="width:52px;height:36px;object-fit:contain;border-radius:6px;background:rgba(255,255,255,0.9);padding:3px">`
-          : `<div class="brief-logo-placeholder">${(c.name||'?')[0].toUpperCase()}</div>`}
-        <div class="brief-card-header-text">
-          <div style="font-weight:700;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${platforms}</div>
+    const platforms = (c.platforms||[]).map(p=>`<span class="brief-row-platform">${p}</span>`).join('');
+    const noteCount = (b.notes||[]).length;
+    const lastNote = noteCount ? b.notes[noteCount-1] : null;
+    const logoHtml = getClientLogo(c.name)
+      ? `<img src="${getClientLogo(c.name)}" class="brief-row-logo">`
+      : `<div class="brief-row-logo brief-row-logo-placeholder" style="background:${c.color||'#DD0B82'}">${(c.name||'?')[0].toUpperCase()}</div>`;
+
+    return `<tr class="brief-row" onclick="toggleBriefRow('${c.id}')">
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${logoHtml}
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px">${c.name}</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">${platforms}</div>
+          </div>
         </div>
+      </td>
+      <td onclick="event.stopPropagation()">
         <select class="brief-status-select ${statusCls}" id="brief-status-${c.id}"
-          style="flex-shrink:0"
           onchange="updateBriefStatus('${c.id}','${month}','${b.id||''}',this)">
           <option value="Not Started" ${status==='Not Started'?'selected':''}>Not Started</option>
           <option value="In Progress" ${status==='In Progress'?'selected':''}>In Progress</option>
           <option value="Submitted" ${status==='Submitted'?'selected':''}>Submitted</option>
         </select>
-      </div>
-      <!-- Drive link strip -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f5f5f0;border-bottom:1px solid var(--gray2)">
-        <span style="font-size:14px;flex-shrink:0">📁</span>
+      </td>
+      <td onclick="event.stopPropagation()" style="max-width:200px">
         ${c.driveLink
-          ? `<a href="${c.driveLink}" target="_blank" rel="noopener"
-               style="flex:1;font-size:11px;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:underline"
-               title="${c.driveLink}">${c.driveLink.replace('https://','')}</a>
-             <button onclick="editDriveLink('${c.id}')"
-               style="flex-shrink:0;background:var(--gray2);border:none;border-radius:5px;color:var(--text);font-size:10px;font-weight:700;padding:2px 8px;cursor:pointer">Edit</button>`
-          : `<input id="drive-input-${c.id}" type="url" placeholder="Paste Google Drive folder link and save..."
-               style="flex:1;border:none;outline:none;background:transparent;font-size:11px;color:var(--text);font-family:'Poppins',sans-serif"
-               onkeydown="if(event.key==='Enter')saveDriveLink('${c.id}')">
-             <button onclick="saveDriveLink('${c.id}')"
-               style="flex-shrink:0;background:var(--pink);border:none;border-radius:5px;color:#fff;font-size:10px;font-weight:700;padding:2px 10px;cursor:pointer">Save</button>`}
-      </div>
-      <!-- Body -->
-      <div class="brief-card-body">
-        <!-- Posted notes thread -->
-        <div id="brief-thread-${c.id}">
-          ${(b.notes&&b.notes.length) ? b.notes.map((n,ni)=>`
-            <div style="background:${n.done?'#f0f0f0':'var(--gray)'};border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative;overflow:hidden">
-              <div style="font-size:11px;font-weight:700;color:var(--pink);margin-bottom:4px">${n.author} &middot; ${n.time}</div>
-              <div style="font-size:13px;color:${n.done?'var(--gray3)':'var(--text)'};white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;text-decoration:${n.done?'line-through':'none'}">${linkifyText(n.text)}</div>
-              <div style="position:absolute;top:6px;right:6px;display:flex;gap:4px">
-                <button onclick="toggleBriefNote('${c.id}','${month}','${b.id||''}',${ni},${!n.done})"
-                  style="background:${n.done?'#c8e6c9':'none'};border:1.5px solid ${n.done?'#66bb6a':'var(--gray2)'};color:${n.done?'#2e7d32':'var(--gray3)'};cursor:pointer;font-size:11px;padding:1px 6px;border-radius:4px;line-height:1.4" title="${n.done?'Mark undone':'Mark done'}">✓</button>
-                <button onclick="deleteBriefNote('${c.id}','${month}','${b.id||''}',${ni})"
-                  style="background:none;border:none;color:var(--gray3);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;line-height:1" title="Delete">✕</button>
-              </div>
-            </div>`).join('') : '<div style="font-size:12px;color:var(--gray3);padding:4px 0 8px">No notes posted yet.</div>'}
-        </div>
-        ${b.clientNotes ? `
-          <div class="brief-section-label">💬 Client Submitted Brief</div>
-          <div class="brief-client-notes-box" style="margin-bottom:8px">${b.clientNotes}</div>` : ''}
-        <!-- New note input -->
-        <div style="border-top:1px solid var(--gray2);padding-top:10px">
-          <textarea class="brief-textarea" id="brief-notes-${c.id}"
-            placeholder="Type a note and click Post..."
-            style="min-height:56px"
-            onkeydown="if(event.ctrlKey&&event.key==='Enter')postBriefNote('${c.id}','${month}','${b.id||''}')"
-          ></textarea>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-            <span style="font-size:11px;color:var(--gray3)">Ctrl+Enter to post</span>
-            <button onclick="postBriefNote('${c.id}','${month}','${b.id||''}')"
-              style="padding:6px 18px;background:var(--pink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">
-              Post Note
-            </button>
+          ? `<div style="display:flex;align-items:center;gap:6px">
+               <a href="${c.driveLink}" target="_blank" rel="noopener"
+                 style="font-size:11px;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:underline;max-width:140px" title="${c.driveLink}">${c.driveLink.replace('https://','')}</a>
+               <button onclick="editDriveLink('${c.id}')"
+                 style="flex-shrink:0;background:var(--gray2);border:none;border-radius:5px;color:var(--text);font-size:10px;font-weight:700;padding:2px 8px;cursor:pointer">Edit</button>
+             </div>`
+          : `<div style="display:flex;align-items:center;gap:6px">
+               <input id="drive-input-${c.id}" type="url" placeholder="Paste Drive link..."
+                 style="width:120px;border:1.5px solid var(--gray2);border-radius:6px;padding:3px 6px;font-size:11px;color:var(--text);font-family:'Poppins',sans-serif;outline:none"
+                 onkeydown="if(event.key==='Enter')saveDriveLink('${c.id}')">
+               <button onclick="saveDriveLink('${c.id}')"
+                 style="flex-shrink:0;background:var(--pink);border:none;border-radius:5px;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;cursor:pointer">Save</button>
+             </div>`}
+      </td>
+      <td style="max-width:240px">
+        ${lastNote
+          ? `<div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${lastNote.text.replace(/"/g,'&quot;')}">
+               <span style="color:var(--gray3)">${lastNote.author}:</span> ${lastNote.text}
+             </div>`
+          : `<span style="font-size:12px;color:var(--gray3);font-style:italic">No notes yet</span>`}
+      </td>
+      <td onclick="event.stopPropagation()">
+        <button class="brief-expand-btn" id="brief-expand-btn-${c.id}" onclick="toggleBriefRow('${c.id}')">
+          ▾ ${noteCount} note${noteCount===1?'':'s'}
+        </button>
+      </td>
+    </tr>
+    <tr class="brief-row-detail" id="brief-detail-${c.id}" style="display:none">
+      <td colspan="5">
+        <div class="brief-detail-body">
+          <div id="brief-thread-${c.id}">
+            ${(b.notes&&b.notes.length) ? b.notes.map((n,ni)=>`
+              <div style="background:${n.done?'#f0f0f0':'var(--gray)'};border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative;overflow:hidden">
+                <div style="font-size:11px;font-weight:700;color:var(--pink);margin-bottom:4px">${n.author} &middot; ${n.time}</div>
+                <div style="font-size:13px;color:${n.done?'var(--gray3)':'var(--text)'};white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;text-decoration:${n.done?'line-through':'none'}">${linkifyText(n.text)}</div>
+                <div style="position:absolute;top:6px;right:6px;display:flex;gap:4px">
+                  <button onclick="toggleBriefNote('${c.id}','${month}','${b.id||''}',${ni},${!n.done})"
+                    style="background:${n.done?'#c8e6c9':'none'};border:1.5px solid ${n.done?'#66bb6a':'var(--gray2)'};color:${n.done?'#2e7d32':'var(--gray3)'};cursor:pointer;font-size:11px;padding:1px 6px;border-radius:4px;line-height:1.4" title="${n.done?'Mark undone':'Mark done'}">✓</button>
+                  <button onclick="deleteBriefNote('${c.id}','${month}','${b.id||''}',${ni})"
+                    style="background:none;border:none;color:var(--gray3);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;line-height:1" title="Delete">✕</button>
+                </div>
+              </div>`).join('') : '<div style="font-size:12px;color:var(--gray3);padding:4px 0 8px">No notes posted yet.</div>'}
+          </div>
+          ${b.clientNotes ? `
+            <div class="brief-section-label">💬 Client Submitted Brief</div>
+            <div class="brief-client-notes-box" style="margin-bottom:8px">${b.clientNotes}</div>` : ''}
+          <div style="border-top:1px solid var(--gray2);padding-top:10px">
+            <textarea class="brief-textarea" id="brief-notes-${c.id}"
+              placeholder="Type a note and click Post..."
+              style="min-height:56px"
+              onkeydown="if(event.ctrlKey&&event.key==='Enter')postBriefNote('${c.id}','${month}','${b.id||''}')"
+            ></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+              <span style="font-size:11px;color:var(--gray3)">Ctrl+Enter to post</span>
+              <button onclick="postBriefNote('${c.id}','${month}','${b.id||''}')"
+                style="padding:6px 18px;background:var(--pink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">
+                Post Note
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>`;
-  }).join('');
+      </td>
+    </tr>`;
+}).join('');
 }
+
+window.toggleBriefRow = (clientId) => {
+  const detail = document.getElementById('brief-detail-'+clientId);
+  const btn = document.getElementById('brief-expand-btn-'+clientId);
+  if(!detail) return;
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'table-row';
+  if(btn) btn.innerHTML = btn.innerHTML.replace(isOpen?'▴':'▾', isOpen?'▾':'▴');
+};
 
 window.updateBriefStatus = async (clientId, month, briefId, selectEl) => {
   const status = selectEl.value;
