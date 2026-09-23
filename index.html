@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -160,7 +160,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .ev-purple{background:#f3e5f5;color:#6a1b9a}
 
 /* ── TODOS ── */
-.todo-boards{display:grid;grid-template-columns:repeat(3,1fr);gap:0;height:100%;overflow:hidden}
+.todo-boards{display:grid;grid-template-columns:repeat(4,1fr);gap:0;height:100%;overflow:hidden}
 .todo-boards-embedded{height:600px}
 .checklist-tick{padding:6px 12px;border-radius:20px;border:2px solid var(--gray2);background:var(--white);font-size:11px;font-weight:700;color:var(--gray3);cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif}
 .checklist-tick.done{background:#e8f5e9;border-color:#43a047;color:#2e7d32}
@@ -172,16 +172,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .todo-board-name{font-size:22px;font-weight:800;color:var(--text);display:inline;vertical-align:middle}
 .todo-board-meta{font-size:12px;color:var(--gray3);margin-top:4px;display:flex;align-items:center;gap:10px}
 .todo-board-scroll{flex:1;overflow-y:auto;padding:10px 10px 16px}
-/* Category swimlanes */
-.todo-cat{background:var(--white);border-radius:10px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden}
-.todo-cat-header{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;cursor:pointer;user-select:none;border-bottom:1.5px solid transparent}
-.todo-cat-header:hover{opacity:.85}
-.todo-cat-label{font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase}
-.todo-cat-badge{font-size:11px;font-weight:700;background:rgba(0,0,0,0.08);padding:2px 8px;border-radius:20px}
-.todo-cat-toggle{font-size:13px;transition:transform .2s;color:rgba(0,0,0,0.4)}
-.todo-cat.collapsed .todo-cat-toggle{transform:rotate(-90deg)}
-.todo-cat-body{padding:0 10px 6px}
-.todo-cat.collapsed .todo-cat-body{display:none}
 /* Task items */
 .todo-item{display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid var(--gray2)}
 .todo-item:last-child{border-bottom:none}
@@ -273,37 +263,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .month-selector select{padding:8px 14px;border:2px solid var(--gray2);border-radius:8px;font-size:14px;font-weight:600;outline:none}
 .month-selector select:focus{border-color:var(--pink)}
 
-/* ── MONTHLY TRACKER ── */
-.tracker-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);font-size:13px}
-.tracker-table th{background:var(--black);color:var(--white);padding:12px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;position:sticky;top:0;z-index:10}
-.tracker-table th.center{text-align:center}
-.tracker-table td{padding:11px 14px;border-bottom:1px solid var(--gray2);vertical-align:middle}
-.tracker-table tr:last-child td{border-bottom:none}
-.tracker-table tr:hover td{background:var(--gray)}
-.tracker-client-name{font-weight:600;font-size:14px}
-.tracker-platforms{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
-.tracker-platform-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
-.tracker-check-cell{text-align:center}
-.tracker-checkbox{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;background:var(--white);font-size:13px;flex-shrink:0}
-.tracker-checkbox:hover{border-color:var(--pink)}
-.tracker-checkbox.done{background:#2e7d32;border-color:#2e7d32;color:#fff}
-.tracker-checkbox.manual{background:#e65100;border-color:#e65100;color:#fff}
-.tracker-checkbox.na{background:var(--gray2);border-color:var(--gray2);color:var(--gray3)}
-.tracker-legend{display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray3)}
-.legend-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--gray2);display:inline-flex;align-items:center;justify-content:center;font-size:9px}
-.legend-done{background:#2e7d32;border-color:#2e7d32;color:#fff}
-.legend-manual{background:#e65100;border-color:#e65100;color:#fff}
-.legend-pending{background:var(--white);border-color:var(--gray2)}
-.tracker-progress{height:4px;background:var(--gray2);border-radius:2px;margin-top:4px;overflow:hidden}
-.tracker-progress-bar{height:100%;background:var(--pink);border-radius:2px;transition:width .3s}
-.tracker-stats{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.tracker-stat-pill{padding:6px 14px;border-radius:50px;font-size:12px;font-weight:700;background:var(--white);border:2px solid var(--gray2)}
-.tracker-stat-pill span{color:var(--pink)}
-.tracker-notes-input{border:none;outline:none;font-size:12px;font-family:"Poppins",sans-serif;color:var(--gray3);background:transparent;width:100%;min-width:80px}
-.tracker-notes-input::placeholder{color:var(--gray2)}
-.tracker-notes-input:focus{color:var(--text)}
-
 .pin-row-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--gray);border-radius:10px;gap:10px}
 
 /* ── LOADING ── */
@@ -317,7 +276,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
   .main{margin-left:0}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .todo-boards{grid-template-columns:1fr}
-  .todo-boards-embedded{height:900px}
+  .todo-boards-embedded{height:1100px}
   .metrics-grid{grid-template-columns:repeat(2,1fr)}
 }
 .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:var(--white);padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(100px);opacity:0;transition:all .3s}
@@ -399,7 +358,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       <div class="nav-item" onclick="showPage('clients')"><span class="nav-icon">👥</span> Clients</div>
       <div class="nav-item" onclick="showPage('calendar')"><span class="nav-icon">📅</span> Calendar</div>
       <div class="nav-section">Work</div>
-      <div class="nav-item" onclick="showPage('tracker')"><span class="nav-icon">📌</span> Monthly Tracker</div>
       <div class="nav-item" onclick="showPage('briefing')"><span class="nav-icon">📝</span> Briefing</div>
       <div class="nav-section">Reporting</div>
       <div class="nav-item" onclick="showPage('reports')"><span class="nav-icon">📊</span> Reports</div>
@@ -452,7 +410,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
           <div style="padding:16px 20px 10px;display:flex;align-items:center;justify-content:space-between;background:var(--white);border-bottom:2px solid var(--gray2)">
             <div>
               <div class="card-title" style="margin-bottom:2px">✅ To-Do Lists</div>
-              <div class="page-sub" style="font-size:11px">Tasks organised by tag · click ▾ to collapse a section</div>
+              <div class="page-sub" style="font-size:11px">Tasks organised by tag — Retainer, Ad Hoc, Website, App Development</div>
             </div>
             <button onclick="addTodoModal()" class="btn btn-pink" style="padding:6px 14px;font-size:12px">+ New Task</button>
           </div>
@@ -493,25 +451,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
           </div>
           <div class="todo-boards todo-boards-embedded" id="todo-boards">
             <div class="loading"><div class="spinner"></div>Loading tasks...</div>
-          </div>
-          <!-- Urgent Notes — admin only -->
-          <div id="urgent-notes-panel" style="background:#fff3e0;border-top:3px solid #DD0B82;padding:12px 20px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:18px">🔴</span>
-                <span style="font-weight:800;font-size:14px;color:#c4076e;letter-spacing:0.5px;text-transform:uppercase">Urgent Notes</span>
-              </div>
-              <button onclick="toggleUrgentNotes()" style="background:none;border:none;font-size:12px;color:var(--gray3);cursor:pointer;padding:2px 8px;border-radius:4px;border:1px solid var(--gray2)">▲ Hide</button>
-            </div>
-            <div style="display:flex;gap:10px;align-items:flex-start">
-              <textarea id="urgent-notes-text" placeholder="Type urgent notes here — visible to Megan & Stacey only. Auto-saves as you type..."
-                style="flex:1;min-height:60px;max-height:120px;padding:10px 12px;border:2px solid #DD0B82;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;resize:vertical;background:#fff;color:var(--text);line-height:1.5"
-                oninput="scheduleUrgentNotesSave()"></textarea>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-              <span id="urgent-notes-status" style="font-size:11px;color:var(--gray3);font-style:italic"></span>
-              <span style="font-size:11px;color:var(--gray3)">Only visible to Megan & Stacey</span>
-            </div>
           </div>
         </div>
 
@@ -597,20 +536,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
             <div class="cal-day-header">Fri</div>
             <div class="cal-day-header">Sat</div>
           </div>
-        </div>
-      </div>
-
-      <!-- ── MONTHLY TRACKER ── -->
-      <div class="page" id="page-tracker" style="display:none;flex-direction:column;position:fixed;top:64px;left:220px;right:0;bottom:0;z-index:1;background:var(--cream)">
-        <div style="padding:16px 28px 12px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gray2);background:var(--white)">
-          <div>
-            <div class="page-title">📌 Monthly Tracker</div>
-            <div class="page-sub">Content status for all clients this month</div>
-          </div>
-          <select id="tracker-month" onchange="loadTracker()" style="padding:8px 14px;border:2px solid var(--gray2);border-radius:8px;font-size:14px;font-weight:600;outline:none;cursor:pointer"></select>
-        </div>
-        <div id="tracker-table-wrap" style="flex:1;overflow-y:auto;padding:20px 28px">
-          <div class="loading"><div class="spinner"></div>Loading tracker...</div>
         </div>
       </div>
 
@@ -1434,10 +1359,6 @@ async function startAgencyApp() {
       if(allowed.some(x=>txt.includes(x))) n.style.display='flex';
       else n.style.display='none';
     });
-    // Hide Monthly Tracker nav specifically
-    document.querySelectorAll('.nav-item').forEach(n => {
-      if(n.textContent.includes('Monthly Tracker')) n.style.display='none';
-    });
     // Show Casey's send-to-admin panel
     const caseyPanel = document.getElementById('casey-admin-panel');
     if(caseyPanel) caseyPanel.style.display = 'block';
@@ -1466,13 +1387,6 @@ async function startAgencyApp() {
   loadDashboard();
   renderCalendar();
   await populateMonthSelectors();
-  // Hide urgent notes panel for Casey
-  if(currentUser.role === 'content') {
-    const p = document.getElementById('urgent-notes-panel');
-    if(p) p.style.display = 'none';
-  } else {
-    loadUrgentNotes();
-  }
 }
 
 // ── CLIENTS ──
@@ -1907,120 +1821,102 @@ window.addToGoogleCalendar = () => {
 // ── TODOS ──
 const BOARD_COLORS = { Megan:'#DD0B82', Stacey:'#3496D3', Casey:'#F7B731' };
 
-// Per-board selected priority state
-const boardPriority = { Megan:'High', Stacey:'High', Casey:'High' };
+// Per-tag selected priority state
+const catPriority = { retainer:'High', adhoc:'High', website:'High', appdev:'High' };
 
 let todoUnsubscribe = null;
 
-// Category definitions with colours and icons
+// Tag definitions with colours and icons — these are the board's columns
 const TODO_CATS = [
-  { id:'adhoc',    label:'Ad Hoc',          icon:'⚡', bg:'#f5f0ff', border:'#9c5fe8', text:'#5b00b5' },
   { id:'retainer', label:'Retainer',        icon:'🌟', bg:'#fff8f0', border:'#f7a440', text:'#b35a00' },
+  { id:'adhoc',    label:'Ad Hoc',          icon:'⚡', bg:'#f5f0ff', border:'#9c5fe8', text:'#5b00b5' },
   { id:'website',  label:'Website',         icon:'🌐', bg:'#f0f4ff', border:'#5b7fe8', text:'#1a3ab5' },
   { id:'appdev',   label:'App Development', icon:'📱', bg:'#e8f5e9', border:'#43a047', text:'#1b5e20' },
 ];
 
 function renderTodoBoards(todos) {
   const isContent = currentUser.role==='content';
-  const members = isContent ? ['Casey'] : ['Megan','Stacey','Casey'];
   const boards = document.getElementById('todo-boards');
   if(!boards) return;
-  const savedInputs = {}, savedCats = {}, savedClients = {};
-  members.forEach(m => {
-    const el = document.getElementById('add-input-'+m);
-    if(el && el.dataset.justPosted !== '1') savedInputs[m] = el.value;
-    const cs = document.getElementById('add-cat-'+m); if(cs) savedCats[m] = cs.value;
-    const cl = document.getElementById('add-client-'+m); if(cl) savedClients[m] = cl.value;
+  const visibleTodos = isContent ? todos.filter(t=>(t.assignee||t.assignedTo)==='Casey') : todos;
+  const assignOptions = isContent ? ['Casey'] : ['Megan','Stacey','Casey'];
+
+  const savedInputs = {}, savedAssignees = {}, savedClients = {};
+  TODO_CATS.forEach(cat => {
+    const el = document.getElementById('add-input-'+cat.id);
+    if(el && el.dataset.justPosted !== '1') savedInputs[cat.id] = el.value;
+    const as = document.getElementById('add-assignee-'+cat.id); if(as) savedAssignees[cat.id] = as.value;
+    const cl = document.getElementById('add-client-'+cat.id); if(cl) savedClients[cat.id] = cl.value;
   });
-  boards.innerHTML = members.map(m => {
-    const mtodos = todos.filter(t=>(t.assignee===m)||(t.assignedTo===m));
-    const open = mtodos.filter(t=>!t.done);
-    const done = mtodos.filter(t=>t.done);
-    const color = BOARD_COLORS[m]||'#DD0B82';
-    const pri = boardPriority[m]||'High';
-    const completedPct = mtodos.length ? Math.round((done.length/mtodos.length)*100) : 0;
-    const catsHtml = TODO_CATS.map(cat => {
-      const catTodos = mtodos.filter(t => (t.category||'retainer') === cat.id);
-      const catOpen  = catTodos.filter(t=>!t.done);
-      const catDone  = catTodos.filter(t=>t.done);
-      const sorted   = [...catOpen.sort((a,b)=>{ const p={High:0,Medium:1,Med:1,Low:2}; return (p[a.priority||'High']||0)-(p[b.priority||'High']||0); }), ...catDone];
-      const tasksHtml = sorted.length===0
-        ? `<div style="padding:10px 4px 6px;font-size:12px;color:var(--gray3);font-style:italic">No tasks here yet.</div>`
-        : sorted.map(t => {
-          const priKey = (t.priority||'High').toLowerCase().replace('medium','med');
-          const fromBadge = t.assignedBy==='Casey'&&m!=='Casey' ? `<span style="font-size:10px;background:#fce4ec;color:#c62828;padding:1px 6px;border-radius:8px;font-weight:700">from Casey</span>` : '';
-          const clientBadge = t.clientName ? `<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 7px;border-radius:8px;font-weight:600">📌 ${t.clientName}</span>` : '';
-          return `<div class="todo-item">
-            <div class="todo-check${t.done?' checked':''}" onclick="toggleTodo('${t.id}',${!t.done},'${m}')">${t.done?'✓':''}</div>
-            <div class="todo-item-body">
-              <div class="todo-text${t.done?' done':''}">${t.text}</div>
-              <div class="todo-item-meta">
-                <span class="todo-priority-label priority-${priKey}-label">${(t.priority||'High').toUpperCase()}</span>
-                ${clientBadge}${fromBadge}
-              </div>
+
+  boards.innerHTML = TODO_CATS.map(cat => {
+    const catTodos = visibleTodos.filter(t => (t.category||'retainer') === cat.id);
+    const open = catTodos.filter(t=>!t.done);
+    const done = catTodos.filter(t=>t.done);
+    const sorted = [...open.sort((a,b)=>{ const p={High:0,Medium:1,Med:1,Low:2}; return (p[a.priority||'High']||0)-(p[b.priority||'High']||0); }), ...done];
+    const completedPct = catTodos.length ? Math.round((done.length/catTodos.length)*100) : 0;
+    const pri = catPriority[cat.id]||'High';
+
+    const tasksHtml = sorted.length===0
+      ? `<div style="padding:16px 4px;font-size:12px;color:var(--gray3);font-style:italic">No tasks here yet.</div>`
+      : sorted.map(t => {
+        const priKey = (t.priority||'High').toLowerCase().replace('medium','med');
+        const assignee = t.assignee || t.assignedTo || 'Megan';
+        const assigneeColor = BOARD_COLORS[assignee] || '#999';
+        const fromBadge = t.assignedBy==='Casey'&&assignee!=='Casey' ? `<span style="font-size:10px;background:#fce4ec;color:#c62828;padding:1px 6px;border-radius:8px;font-weight:700">from Casey</span>` : '';
+        const clientBadge = t.clientName ? `<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 7px;border-radius:8px;font-weight:600">📌 ${t.clientName}</span>` : '';
+        return `<div class="todo-item">
+          <div class="todo-check${t.done?' checked':''}" onclick="toggleTodo('${t.id}',${!t.done})">${t.done?'✓':''}</div>
+          <div class="todo-item-body">
+            <div class="todo-text${t.done?' done':''}">${t.text}</div>
+            <div class="todo-item-meta">
+              <span class="todo-priority-label priority-${priKey}-label">${(t.priority||'High').toUpperCase()}</span>
+              <span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;color:#fff;background:${assigneeColor}">${assignee}</span>
+              ${clientBadge}${fromBadge}
             </div>
-            <button onclick="openTodoModal('${t.id}')" title="Edit"
-              style="flex-shrink:0;background:none;border:1.5px solid var(--gray2);border-radius:6px;padding:2px 7px;cursor:pointer;font-size:11px;color:var(--gray3);transition:all .15s"
-              onmouseover="this.style.borderColor='${cat.border}';this.style.color='${cat.text}'"
-              onmouseout="this.style.borderColor='var(--gray2)';this.style.color='var(--gray3)'">✏️</button>
-          </div>`;
-        }).join('');
-      return `<div class="todo-cat" id="cat-${m}-${cat.id}">
-        <div class="todo-cat-header" style="background:${cat.bg};border-bottom-color:${cat.border}" onclick="toggleCat('${m}','${cat.id}')">
-          <div style="display:flex;align-items:center;gap:7px">
-            <span style="font-size:14px">${cat.icon}</span>
-            <span class="todo-cat-label" style="color:${cat.text}">${cat.label}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="todo-cat-badge" style="color:${cat.text}">${catOpen.length} open${catDone.length?' · '+catDone.length+' done':''}</span>
-            <span class="todo-cat-toggle">▾</span>
-          </div>
-        </div>
-        <div class="todo-cat-body">${tasksHtml}</div>
-      </div>`;
-    }).join('');
+          <button onclick="openTodoModal('${t.id}')" title="Edit"
+            style="flex-shrink:0;background:none;border:1.5px solid var(--gray2);border-radius:6px;padding:2px 7px;cursor:pointer;font-size:11px;color:var(--gray3);transition:all .15s">✏️</button>
+        </div>`;
+      }).join('');
+
     return `<div class="todo-board">
-      <div class="todo-board-header">
-        <span class="todo-board-dot" style="background:${color}"></span>
-        <span class="todo-board-name">${m}</span>
+      <div class="todo-board-header" style="border-left:4px solid ${cat.border}">
+        <span style="font-size:16px;margin-right:6px">${cat.icon}</span>
+        <span class="todo-board-name" style="font-size:17px">${cat.label}</span>
         <div class="todo-board-meta">
           <span>${open.length} open · ${done.length} done</span>
           <div style="flex:1;max-width:80px;height:4px;background:var(--gray2);border-radius:4px;overflow:hidden">
-            <div style="height:100%;width:${completedPct}%;background:${color};border-radius:4px"></div>
+            <div style="height:100%;width:${completedPct}%;background:${cat.border};border-radius:4px"></div>
           </div>
-          <span style="font-size:11px;font-weight:700;color:${color}">${completedPct}%</span>
+          <span style="font-size:11px;font-weight:700;color:${cat.border}">${completedPct}%</span>
         </div>
       </div>
-      <div class="todo-board-scroll" id="scroll-${m}">${catsHtml}</div>
+      <div class="todo-board-scroll" id="scroll-${cat.id}">${tasksHtml}</div>
       <div class="todo-board-footer">
         <div class="todo-add-row">
-          <input class="todo-add-input" id="add-input-${m}" type="text" placeholder="Quick add a task..."
-            value="${savedInputs[m]||''}" onkeydown="if(event.key==='Enter')quickAddTodo('${m}')">
-          <button class="todo-add-btn" onclick="quickAddTodo('${m}')">+</button>
+          <input class="todo-add-input" id="add-input-${cat.id}" type="text" placeholder="Quick add a task..."
+            value="${savedInputs[cat.id]||''}" onkeydown="if(event.key==='Enter')quickAddTodo('${cat.id}')">
+          <button class="todo-add-btn" onclick="quickAddTodo('${cat.id}')">+</button>
         </div>
         <div class="todo-footer-controls">
-          <select id="add-cat-${m}" class="cat-select" title="Category">
-            ${TODO_CATS.map(c=>`<option value="${c.id}"${(savedCats[m]||'retainer')===c.id?' selected':''}>${c.icon} ${c.label}</option>`).join('')}
+          <select id="add-assignee-${cat.id}" class="cat-select" title="Assign to">
+            ${assignOptions.map(m=>`<option value="${m}"${(savedAssignees[cat.id]||assignOptions[0])===m?' selected':''}>${m}</option>`).join('')}
           </select>
-          <select id="add-client-${m}" class="cat-select" title="Client">
+          <select id="add-client-${cat.id}" class="cat-select" title="Client">
             <option value="">No client</option>
-            ${allClients.map(c=>`<option value="${c.id}"${savedClients[m]===c.id?' selected':''}>${c.name}</option>`).join('')}
+            ${allClients.map(c=>`<option value="${c.id}"${savedClients[cat.id]===c.id?' selected':''}>${c.name}</option>`).join('')}
           </select>
         </div>
         <div style="display:flex;gap:5px;margin-top:6px">
-          <button class="priority-toggle${pri==='High'?' active-high':''}" onclick="setBoardPriority('${m}','High',this)">HIGH</button>
-          <button class="priority-toggle${pri==='Medium'?' active-med':''}" onclick="setBoardPriority('${m}','Medium',this)">MED</button>
-          <button class="priority-toggle${pri==='Low'?' active-low':''}" onclick="setBoardPriority('${m}','Low',this)">LOW</button>
+          <button class="priority-toggle${pri==='High'?' active-high':''}" onclick="setCatPriority('${cat.id}','High',this)">HIGH</button>
+          <button class="priority-toggle${pri==='Medium'?' active-med':''}" onclick="setCatPriority('${cat.id}','Medium',this)">MED</button>
+          <button class="priority-toggle${pri==='Low'?' active-low':''}" onclick="setCatPriority('${cat.id}','Low',this)">LOW</button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
-
-window.toggleCat = (member, catId) => {
-  const el = document.getElementById('cat-'+member+'-'+catId);
-  if(el) el.classList.toggle('collapsed');
-};
 
 window.sendCaseyTask = async () => {
   const assignTo = document.getElementById('casey-assign-to').value;
@@ -2079,8 +1975,8 @@ function loadTodos() {
   });
 }
 
-window.setBoardPriority = (member, priority, btn) => {
-  boardPriority[member] = priority;
+window.setCatPriority = (catId, priority, btn) => {
+  catPriority[catId] = priority;
   const footer = btn.closest('.todo-board-footer');
   footer.querySelectorAll('.priority-toggle').forEach(b=>{
     b.className = 'priority-toggle';
@@ -2088,73 +1984,28 @@ window.setBoardPriority = (member, priority, btn) => {
   btn.className = `priority-toggle active-${priority==='High'?'high':priority==='Medium'?'med':'low'}`;
 };
 
-window.quickAddTodo = async (member) => {
-  const input = document.getElementById('add-input-'+member);
+window.quickAddTodo = async (catId) => {
+  const input = document.getElementById('add-input-'+catId);
   const text = input.value.trim();
   if(!text) return;
-  const clientId = document.getElementById('add-client-'+member)?.value || '';
+  const assignee = document.getElementById('add-assignee-'+catId)?.value || 'Megan';
+  const clientId = document.getElementById('add-client-'+catId)?.value || '';
   const clientName = clientId ? (allClients.find(c=>c.id===clientId)?.name||'') : '';
-  const category = document.getElementById('add-cat-'+member)?.value || 'retainer';
   const data = {
-    text, assignee: member, assignedTo: member,
-    priority: boardPriority[member]||'High',
-    done: false, clientId, clientName, category,
+    text, assignee, assignedTo: assignee,
+    priority: catPriority[catId]||'High',
+    done: false, clientId, clientName, category: catId,
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
   };
   input.value = '';
   input.dataset.justPosted = '1';
   setTimeout(() => { if(input) input.dataset.justPosted = '0'; }, 500);
-  const sel = document.getElementById('add-client-'+member); if(sel) sel.value = '';
+  const sel = document.getElementById('add-client-'+catId); if(sel) sel.value = '';
   await addDoc(collection(db,'todos'), data);
   loadDashboard();
 };
 
 window.addTodoModal = () => openTodoModal(null);
-
-// ── URGENT NOTES ──
-let urgentNotesSaveTimer = null;
-
-async function loadUrgentNotes() {
-  try {
-    const snap = await getDoc(doc(db,'settings','urgentNotes'));
-    if(snap.exists()) {
-      document.getElementById('urgent-notes-text').value = snap.data().text || '';
-    }
-    document.getElementById('urgent-notes-status').textContent = '';
-  } catch(e) { /* silent */ }
-}
-
-window.scheduleUrgentNotesSave = () => {
-  const status = document.getElementById('urgent-notes-status');
-  if(status) status.textContent = 'Saving...';
-  clearTimeout(urgentNotesSaveTimer);
-  urgentNotesSaveTimer = setTimeout(async () => {
-    try {
-      const text = document.getElementById('urgent-notes-text')?.value || '';
-      await setDoc(doc(db,'settings','urgentNotes'), {
-        text, updatedAt: new Date().toISOString(), updatedBy: currentUser?.name||'Admin'
-      });
-      if(status) status.textContent = 'Saved ✓';
-      setTimeout(() => { if(status) status.textContent = ''; }, 2000);
-    } catch(e) {
-      if(status) status.textContent = 'Save failed';
-    }
-  }, 800);
-};
-
-window.toggleUrgentNotes = () => {
-  const panel = document.getElementById('urgent-notes-panel');
-  const btn = panel?.querySelector('button');
-  const textarea = document.getElementById('urgent-notes-text');
-  if(!panel) return;
-  if(textarea.style.display === 'none') {
-    textarea.style.display = '';
-    if(btn) btn.textContent = '▲ Hide';
-  } else {
-    textarea.style.display = 'none';
-    if(btn) btn.textContent = '▼ Show';
-  }
-};
 
 window.toggleTodo = async (id, done, member) => {
   await updateDoc(doc(db,'todos',id),{done, updatedAt:new Date().toISOString()});
@@ -2361,182 +2212,6 @@ window.deleteCaseyMeetingNote = async (id) => {
   loadCaseyMeetingNotes();
 };
 
-// ── MONTHLY TRACKER ──
-// Global month normaliser — converts "July 2026" → "2026-07", leaves "2026-07" unchanged
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-function normMonth(m) {
-  if(!m) return '';
-  if(/^\d{4}-\d{2}$/.test(m)) return m;
-  const parts = m.split(' ');
-  const mi = MONTH_NAMES.indexOf(parts[0]);
-  if(mi>=0 && parts[1]) return `${parts[1]}-${String(mi+1).padStart(2,'0')}`;
-  return m;
-}
-
-async function loadTracker() {
-  const month = document.getElementById('tracker-month').value; // YYYY-MM
-  const wrap = document.getElementById('tracker-table-wrap');
-  wrap.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
-
-  // Exclude UNDP from tracker (not a monthly client)
-  const trackerClients = allClients.filter(c => c.name !== 'UNDP');
-
-  // Fetch ALL tracker docs and filter by normalised month to handle old "July 2026" format
-  const allSnap = await getDocs(collection(db,'tracker'));
-  const trackerData = {};
-  allSnap.docs.forEach(d => {
-    const data = d.data();
-    if(normMonth(data.month) === month) {
-      trackerData[data.clientId] = {docId:d.id, ...data};
-    }
-  });
-
-  const platformColors = {
-    Instagram:'#c2185b', Facebook:'#1565c0', LinkedIn:'#2e7d32',
-    TikTok:'#6a1b9a', YouTube:'#e65100'
-  };
-
-  // Stats
-  let totalDesignDone=0, totalFbIgDone=0, totalLinkedInDone=0, totalBlockDone=0, totalManual=0;
-  trackerClients.forEach(c => {
-    const t = trackerData[c.id] || {};
-    if(t.designDone) totalDesignDone++;
-    if(t.fbIgDone) totalFbIgDone++;
-    if(t.linkedInDone) totalLinkedInDone++;
-    if(t.blockDone) totalBlockDone++;
-    if(t.manualPost) totalManual++;
-  });
-  const n = trackerClients.length;
-
-  const statsHtml = `<div class="tracker-stats">
-    <div class="tracker-stat-pill">🎨 Designs: <span>${totalDesignDone}/${n}</span></div>
-    <div class="tracker-stat-pill">📘 FB+IG: <span>${totalFbIgDone}/${n}</span></div>
-    <div class="tracker-stat-pill">💼 LinkedIn: <span>${totalLinkedInDone}/${n}</span></div>
-    <div class="tracker-stat-pill">📦 Block: <span>${totalBlockDone}/${n}</span></div>
-    <div class="tracker-stat-pill">⚠️ Manual: <span style="color:#e65100">${totalManual}</span></div>
-  </div>`;
-
-  const legendHtml = `<div class="tracker-legend">
-    <div class="legend-item"><div class="legend-dot legend-done">✓</div> Done</div>
-    <div class="legend-item"><div class="legend-dot legend-manual">M</div> Manual post</div>
-    <div class="legend-item"><div class="legend-dot legend-pending"></div> Outstanding</div>
-  </div>`;
-
-  const rows = trackerClients.map(c => {
-    const t = trackerData[c.id] || {};
-    const platforms = (c.platforms||[]).map(p =>
-      `<span class="tracker-platform-dot" style="background:${platformColors[p]||'#999'}" title="${p}"></span>`
-    ).join('');
-
-    // Progress: designs + fbIg + linkedIn + block = 4 steps
-    const steps = [t.designDone, t.captionsDone, t.fbIgDone||t.manualPost, t.linkedInDone, t.blockDone].filter(Boolean).length;
-    const pct = Math.round((steps / 5) * 100);
-
-    // Scheduled: FB+IG column cycles: empty → done → manual → empty
-    const fbIgState = t.manualPost ? 'manual' : t.fbIgDone ? 'done' : '';
-    const fbIgLabel = t.manualPost ? 'M' : t.fbIgDone ? '✓' : '';
-
-    return `<tr>
-      <td style="min-width:170px">
-        <div class="tracker-client-name">${c.name}</div>
-        <div class="tracker-platforms">${platforms}</div>
-        <div class="tracker-progress"><div class="tracker-progress-bar" style="width:${pct}%"></div></div>
-      </td>
-      <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.designDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','designDone',${!!t.designDone})">${t.designDone?'✓':''}</div>
-      </td>
-      <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.captionsDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','captionsDone',${!!t.captionsDone})">${t.captionsDone?'✓':''}</div>
-      </td>
-      <td class="tracker-check-cell">
-        <div class="tracker-checkbox${fbIgState?' '+fbIgState:''}"
-          title="${t.manualPost?'Manual post':t.fbIgDone?'FB+IG scheduled':'Not done'}"
-          onclick="cycleFbIg('${c.id}','${month}',${!!t.fbIgDone},${!!t.manualPost})">
-          ${fbIgLabel}
-        </div>
-      </td>
-      <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.linkedInDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','linkedInDone',${!!t.linkedInDone})">${t.linkedInDone?'✓':''}</div>
-      </td>
-      <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.blockDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','blockDone',${!!t.blockDone})">${t.blockDone?'✓':''}</div>
-      </td>
-      <td class="tracker-check-cell">
-        <div class="tracker-checkbox${t.reportDone?' done':''}" onclick="cycleTrackerField('${c.id}','${month}','reportDone',${!!t.reportDone})">${t.reportDone?'✓':''}</div>
-      </td>
-      <td>
-        <input class="tracker-notes-input" type="text" placeholder="Notes..."
-          value="${(t.notes||'').replace(/"/g,'&quot;')}"
-          onblur="saveTrackerNote('${c.id}','${month}',this.value)"
-          onkeydown="if(event.key==='Enter')this.blur()">
-      </td>
-    </tr>`;
-  }).join('');
-
-  wrap.innerHTML = statsHtml + legendHtml + `
-    <div style="overflow-x:auto">
-    <table class="tracker-table">
-      <thead>
-        <tr>
-          <th>Client</th>
-          <th class="center">🎨 Designs</th>
-          <th class="center">✍️ Captions</th>
-          <th class="center">📘 FB + IG</th>
-          <th class="center">💼 LinkedIn</th>
-          <th class="center">📦 Block</th>
-          <th class="center">📊 Report</th>
-          <th>📝 Notes</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-    </div>`;
-}
-
-window.cycleFbIg = async (clientId, month, fbIgDone, manualPost) => {
-  // Cycle: empty → scheduled done → manual → empty
-  let newFbIg = false, newManual = false;
-  if(!fbIgDone && !manualPost) { newFbIg = true; }
-  else if(fbIgDone) { newFbIg = false; newManual = true; }
-  // else manualPost → reset both
-  const snap = await getDocs(query(collection(db,'tracker'),
-    where('clientId','==',clientId), where('month','==',month)));
-  const data = {fbIgDone:newFbIg, manualPost:newManual, updatedAt:new Date().toISOString()};
-  if(snap.empty) {
-    await addDoc(collection(db,'tracker'),{clientId, month, ...data, createdAt:new Date().toISOString()});
-  } else {
-    await updateDoc(doc(db,'tracker',snap.docs[0].id), data);
-  }
-  loadTracker();
-};
-
-window.cycleTrackerField = async (clientId, month, field, currentVal) => {
-  const newVal = !currentVal;
-  // Always save month in YYYY-MM format
-  const allSnap = await getDocs(query(collection(db,'tracker'),
-    where('clientId','==',clientId)));
-  const existing = allSnap.docs.find(d => {
-    const m = d.data().month||'';
-    return m === month || (m.includes(' ') && normMonth(m) === month);
-  });
-  if(!existing) {
-    await addDoc(collection(db,'tracker'),{clientId, month, [field]:newVal, createdAt:new Date().toISOString()});
-  } else {
-    await updateDoc(doc(db,'tracker',existing.id),{[field]:newVal, month, updatedAt:new Date().toISOString()});
-  }
-  loadTracker();
-};
-
-window.saveTrackerNote = async (clientId, month, notes) => {
-  const snap = await getDocs(query(collection(db,'tracker'),
-    where('clientId','==',clientId), where('month','==',month)));
-  if(snap.empty) {
-    await addDoc(collection(db,'tracker'),{clientId, month, notes, createdAt:new Date().toISOString()});
-  } else {
-    await updateDoc(doc(db,'tracker',snap.docs[0].id),{notes, updatedAt:new Date().toISOString()});
-  }
-};
-
 // ── BRIEFING ──
 async function populateMonthSelectors() {
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -2570,7 +2245,7 @@ async function populateMonthSelectors() {
     const label = `${months[parseInt(mo)-1]} ${yr}`;
     return `<option value="${val}"${val===current?' selected':''}>${label}</option>`;
   });
-  ['brief-month','report-month','p-brief-month','tracker-month'].forEach(id=>{
+  ['brief-month','report-month','p-brief-month'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.innerHTML=options.join('');
   });
 }
@@ -2951,7 +2626,7 @@ window.showPage = (page) => {
   const pageEl = document.getElementById('page-'+page);
   pageEl.classList.add('active');
   // Calendar uses flex layout to fill full height
-  const fullPageModes = ['calendar', 'tracker'];
+  const fullPageModes = ['calendar'];
   pageEl.style.display = fullPageModes.includes(page) ? 'flex' : 'block';
   // Full-page views are position:fixed so main padding stays normal
   document.querySelector('.main').style.padding = fullPageModes.includes(page) ? '0' : '28px';
@@ -2962,7 +2637,6 @@ window.showPage = (page) => {
   if(page==='reports') { loadReports(); checkMetaStatus(); }
   if(page==='settings') { loadGoogleApiSettings(); }
   if(page==='caseyhr') { loadCaseyLeave(); loadCaseyMeetingNotes(); }
-  if(page==='tracker') loadTracker();
   if(page==='calendar') renderCalendar();
 };
 
