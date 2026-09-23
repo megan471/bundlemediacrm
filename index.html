@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -160,7 +160,9 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .ev-purple{background:#f3e5f5;color:#6a1b9a}
 
 /* ── TODOS ── */
-.todo-boards{display:grid;grid-template-columns:repeat(4,1fr);gap:0;height:100%;overflow:hidden}
+.todo-boards{display:grid;grid-template-columns:repeat(3,1fr);gap:0;height:100%;overflow:hidden}
+.todo-board-main{background:var(--cream);border-radius:0;overflow:hidden;height:420px;display:flex;flex-direction:column;border-bottom:2px solid var(--gray2)}
+.todo-board-main .todo-board{border-right:none;height:100%}
 .todo-boards-embedded{height:600px}
 .checklist-tick{padding:6px 12px;border-radius:20px;border:2px solid var(--gray2);background:var(--white);font-size:11px;font-weight:700;color:var(--gray3);cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif}
 .checklist-tick.done{background:#e8f5e9;border-color:#43a047;color:#2e7d32}
@@ -276,7 +278,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
   .main{margin-left:0}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .todo-boards{grid-template-columns:1fr}
-  .todo-boards-embedded{height:1100px}
+  .todo-boards-embedded{height:900px}
   .metrics-grid{grid-template-columns:repeat(2,1fr)}
 }
 .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:var(--white);padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(100px);opacity:0;transition:all .3s}
@@ -410,7 +412,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
           <div style="padding:16px 20px 10px;display:flex;align-items:center;justify-content:space-between;background:var(--white);border-bottom:2px solid var(--gray2)">
             <div>
               <div class="card-title" style="margin-bottom:2px">✅ To-Do Lists</div>
-              <div class="page-sub" style="font-size:11px">Tasks organised by tag — Retainer, Ad Hoc, Website, App Development</div>
+              <div class="page-sub" style="font-size:11px">Retainer up top · Ad Hoc, App Development &amp; Website below</div>
             </div>
             <button onclick="addTodoModal()" class="btn btn-pink" style="padding:6px 14px;font-size:12px">+ New Task</button>
           </div>
@@ -449,7 +451,10 @@ input,textarea,select{font-family:'Poppins',sans-serif}
               </div>
             </div>
           </div>
-          <div class="todo-boards todo-boards-embedded" id="todo-boards">
+          <div class="todo-board-main" id="todo-board-main">
+            <div class="loading"><div class="spinner"></div>Loading tasks...</div>
+          </div>
+          <div class="todo-boards todo-boards-embedded" id="todo-boards-sub">
             <div class="loading"><div class="spinner"></div>Loading tasks...</div>
           </div>
         </div>
@@ -1830,14 +1835,81 @@ let todoUnsubscribe = null;
 const TODO_CATS = [
   { id:'retainer', label:'Retainer',        icon:'🌟', bg:'#fff8f0', border:'#f7a440', text:'#b35a00' },
   { id:'adhoc',    label:'Ad Hoc',          icon:'⚡', bg:'#f5f0ff', border:'#9c5fe8', text:'#5b00b5' },
-  { id:'website',  label:'Website',         icon:'🌐', bg:'#f0f4ff', border:'#5b7fe8', text:'#1a3ab5' },
   { id:'appdev',   label:'App Development', icon:'📱', bg:'#e8f5e9', border:'#43a047', text:'#1b5e20' },
+  { id:'website',  label:'Website',         icon:'🌐', bg:'#f0f4ff', border:'#5b7fe8', text:'#1a3ab5' },
 ];
+
+function buildBoardHtml(cat, catTodos, pri, assignOptions, savedInputs, savedAssignees, savedClients) {
+  const open = catTodos.filter(t=>!t.done);
+  const done = catTodos.filter(t=>t.done);
+  const sorted = [...open.sort((a,b)=>{ const p={High:0,Medium:1,Med:1,Low:2}; return (p[a.priority||'High']||0)-(p[b.priority||'High']||0); }), ...done];
+  const completedPct = catTodos.length ? Math.round((done.length/catTodos.length)*100) : 0;
+
+  const tasksHtml = sorted.length===0
+    ? `<div style="padding:16px 4px;font-size:12px;color:var(--gray3);font-style:italic">No tasks here yet.</div>`
+    : sorted.map(t => {
+      const priKey = (t.priority||'High').toLowerCase().replace('medium','med');
+      const assignee = t.assignee || t.assignedTo || 'Megan';
+      const assigneeColor = BOARD_COLORS[assignee] || '#999';
+      const fromBadge = t.assignedBy==='Casey'&&assignee!=='Casey' ? `<span style="font-size:10px;background:#fce4ec;color:#c62828;padding:1px 6px;border-radius:8px;font-weight:700">from Casey</span>` : '';
+      const clientBadge = t.clientName ? `<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 7px;border-radius:8px;font-weight:600">📌 ${t.clientName}</span>` : '';
+      return `<div class="todo-item">
+        <div class="todo-check${t.done?' checked':''}" onclick="toggleTodo('${t.id}',${!t.done})">${t.done?'✓':''}</div>
+        <div class="todo-item-body">
+          <div class="todo-text${t.done?' done':''}">${t.text}</div>
+          <div class="todo-item-meta">
+            <span class="todo-priority-label priority-${priKey}-label">${(t.priority||'High').toUpperCase()}</span>
+            <span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;color:#fff;background:${assigneeColor}">${assignee}</span>
+            ${clientBadge}${fromBadge}
+          </div>
+        </div>
+        <button onclick="openTodoModal('${t.id}')" title="Edit"
+          style="flex-shrink:0;background:none;border:1.5px solid var(--gray2);border-radius:6px;padding:2px 7px;cursor:pointer;font-size:11px;color:var(--gray3);transition:all .15s">✏️</button>
+      </div>`;
+    }).join('');
+
+  return `<div class="todo-board">
+    <div class="todo-board-header" style="border-left:4px solid ${cat.border}">
+      <span style="font-size:16px;margin-right:6px">${cat.icon}</span>
+      <span class="todo-board-name" style="font-size:17px">${cat.label}</span>
+      <div class="todo-board-meta">
+        <span>${open.length} open · ${done.length} done</span>
+        <div style="flex:1;max-width:80px;height:4px;background:var(--gray2);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${completedPct}%;background:${cat.border};border-radius:4px"></div>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:${cat.border}">${completedPct}%</span>
+      </div>
+    </div>
+    <div class="todo-board-scroll" id="scroll-${cat.id}">${tasksHtml}</div>
+    <div class="todo-board-footer">
+      <div class="todo-add-row">
+        <input class="todo-add-input" id="add-input-${cat.id}" type="text" placeholder="Quick add a task..."
+          value="${savedInputs[cat.id]||''}" onkeydown="if(event.key==='Enter')quickAddTodo('${cat.id}')">
+        <button class="todo-add-btn" onclick="quickAddTodo('${cat.id}')">+</button>
+      </div>
+      <div class="todo-footer-controls">
+        <select id="add-assignee-${cat.id}" class="cat-select" title="Assign to">
+          ${assignOptions.map(m=>`<option value="${m}"${(savedAssignees[cat.id]||assignOptions[0])===m?' selected':''}>${m}</option>`).join('')}
+        </select>
+        <select id="add-client-${cat.id}" class="cat-select" title="Client">
+          <option value="">No client</option>
+          ${allClients.map(c=>`<option value="${c.id}"${savedClients[cat.id]===c.id?' selected':''}>${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:6px">
+        <button class="priority-toggle${pri==='High'?' active-high':''}" onclick="setCatPriority('${cat.id}','High',this)">HIGH</button>
+        <button class="priority-toggle${pri==='Medium'?' active-med':''}" onclick="setCatPriority('${cat.id}','Medium',this)">MED</button>
+        <button class="priority-toggle${pri==='Low'?' active-low':''}" onclick="setCatPriority('${cat.id}','Low',this)">LOW</button>
+      </div>
+    </div>
+  </div>`;
+}
 
 function renderTodoBoards(todos) {
   const isContent = currentUser.role==='content';
-  const boards = document.getElementById('todo-boards');
-  if(!boards) return;
+  const mainEl = document.getElementById('todo-board-main');
+  const subEl = document.getElementById('todo-boards-sub');
+  if(!mainEl || !subEl) return;
   const visibleTodos = isContent ? todos.filter(t=>(t.assignee||t.assignedTo)==='Casey') : todos;
   const assignOptions = isContent ? ['Casey'] : ['Megan','Stacey','Casey'];
 
@@ -1849,73 +1921,15 @@ function renderTodoBoards(todos) {
     const cl = document.getElementById('add-client-'+cat.id); if(cl) savedClients[cat.id] = cl.value;
   });
 
-  boards.innerHTML = TODO_CATS.map(cat => {
-    const catTodos = visibleTodos.filter(t => (t.category||'retainer') === cat.id);
-    const open = catTodos.filter(t=>!t.done);
-    const done = catTodos.filter(t=>t.done);
-    const sorted = [...open.sort((a,b)=>{ const p={High:0,Medium:1,Med:1,Low:2}; return (p[a.priority||'High']||0)-(p[b.priority||'High']||0); }), ...done];
-    const completedPct = catTodos.length ? Math.round((done.length/catTodos.length)*100) : 0;
-    const pri = catPriority[cat.id]||'High';
+  const mainCat = TODO_CATS.find(c=>c.id==='retainer');
+  const subCats = TODO_CATS.filter(c=>c.id!=='retainer');
 
-    const tasksHtml = sorted.length===0
-      ? `<div style="padding:16px 4px;font-size:12px;color:var(--gray3);font-style:italic">No tasks here yet.</div>`
-      : sorted.map(t => {
-        const priKey = (t.priority||'High').toLowerCase().replace('medium','med');
-        const assignee = t.assignee || t.assignedTo || 'Megan';
-        const assigneeColor = BOARD_COLORS[assignee] || '#999';
-        const fromBadge = t.assignedBy==='Casey'&&assignee!=='Casey' ? `<span style="font-size:10px;background:#fce4ec;color:#c62828;padding:1px 6px;border-radius:8px;font-weight:700">from Casey</span>` : '';
-        const clientBadge = t.clientName ? `<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 7px;border-radius:8px;font-weight:600">📌 ${t.clientName}</span>` : '';
-        return `<div class="todo-item">
-          <div class="todo-check${t.done?' checked':''}" onclick="toggleTodo('${t.id}',${!t.done})">${t.done?'✓':''}</div>
-          <div class="todo-item-body">
-            <div class="todo-text${t.done?' done':''}">${t.text}</div>
-            <div class="todo-item-meta">
-              <span class="todo-priority-label priority-${priKey}-label">${(t.priority||'High').toUpperCase()}</span>
-              <span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;color:#fff;background:${assigneeColor}">${assignee}</span>
-              ${clientBadge}${fromBadge}
-            </div>
-          </div>
-          <button onclick="openTodoModal('${t.id}')" title="Edit"
-            style="flex-shrink:0;background:none;border:1.5px solid var(--gray2);border-radius:6px;padding:2px 7px;cursor:pointer;font-size:11px;color:var(--gray3);transition:all .15s">✏️</button>
-        </div>`;
-      }).join('');
+  const catTodosFor = (cat) => visibleTodos.filter(t => (t.category||'retainer') === cat.id);
 
-    return `<div class="todo-board">
-      <div class="todo-board-header" style="border-left:4px solid ${cat.border}">
-        <span style="font-size:16px;margin-right:6px">${cat.icon}</span>
-        <span class="todo-board-name" style="font-size:17px">${cat.label}</span>
-        <div class="todo-board-meta">
-          <span>${open.length} open · ${done.length} done</span>
-          <div style="flex:1;max-width:80px;height:4px;background:var(--gray2);border-radius:4px;overflow:hidden">
-            <div style="height:100%;width:${completedPct}%;background:${cat.border};border-radius:4px"></div>
-          </div>
-          <span style="font-size:11px;font-weight:700;color:${cat.border}">${completedPct}%</span>
-        </div>
-      </div>
-      <div class="todo-board-scroll" id="scroll-${cat.id}">${tasksHtml}</div>
-      <div class="todo-board-footer">
-        <div class="todo-add-row">
-          <input class="todo-add-input" id="add-input-${cat.id}" type="text" placeholder="Quick add a task..."
-            value="${savedInputs[cat.id]||''}" onkeydown="if(event.key==='Enter')quickAddTodo('${cat.id}')">
-          <button class="todo-add-btn" onclick="quickAddTodo('${cat.id}')">+</button>
-        </div>
-        <div class="todo-footer-controls">
-          <select id="add-assignee-${cat.id}" class="cat-select" title="Assign to">
-            ${assignOptions.map(m=>`<option value="${m}"${(savedAssignees[cat.id]||assignOptions[0])===m?' selected':''}>${m}</option>`).join('')}
-          </select>
-          <select id="add-client-${cat.id}" class="cat-select" title="Client">
-            <option value="">No client</option>
-            ${allClients.map(c=>`<option value="${c.id}"${savedClients[cat.id]===c.id?' selected':''}>${c.name}</option>`).join('')}
-          </select>
-        </div>
-        <div style="display:flex;gap:5px;margin-top:6px">
-          <button class="priority-toggle${pri==='High'?' active-high':''}" onclick="setCatPriority('${cat.id}','High',this)">HIGH</button>
-          <button class="priority-toggle${pri==='Medium'?' active-med':''}" onclick="setCatPriority('${cat.id}','Medium',this)">MED</button>
-          <button class="priority-toggle${pri==='Low'?' active-low':''}" onclick="setCatPriority('${cat.id}','Low',this)">LOW</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  mainEl.innerHTML = buildBoardHtml(mainCat, catTodosFor(mainCat), catPriority[mainCat.id]||'High', assignOptions, savedInputs, savedAssignees, savedClients);
+  subEl.innerHTML = subCats.map(cat =>
+    buildBoardHtml(cat, catTodosFor(cat), catPriority[cat.id]||'High', assignOptions, savedInputs, savedAssignees, savedClients)
+  ).join('');
 }
 
 window.sendCaseyTask = async () => {
