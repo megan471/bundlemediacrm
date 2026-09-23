@@ -366,6 +366,9 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         <div style="text-align:center;margin-top:2px">
           <a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--gray3);text-decoration:underline">Forgot password?</a>
         </div>
+        <div style="text-align:center;margin-top:4px">
+          <a href="#" onclick="emergencyResetAll();return false;" style="font-size:11px;color:#c62828;text-decoration:underline">Emergency: reset all 3 team passwords</a>
+        </div>
         <div id="forgot-status" style="display:none;font-size:12px;text-align:center;margin-top:2px"></div>
       </div>
     </div>
@@ -1385,6 +1388,26 @@ window.forgotPassword = async () => {
   } catch(e) {
     status.style.color = '#c62828';
     status.textContent = 'Could not send reset email: ' + e.message;
+  }
+};
+
+window.emergencyResetAll = async () => {
+  if(!confirm('This sets a shared temporary password for Megan, Stacey and Casey so you can get back in right now. Continue?')) return;
+  const status = document.getElementById('forgot-status');
+  status.style.display = 'block';
+  const tempPass = 'BundleReset' + new Date().getFullYear() + '!';
+  try {
+    for(const email of Object.keys(TEAM)) {
+      const passKey = email.replace('@','_').replace('.','_');
+      await setDoc(doc(db, 'teamPasswords', passKey), {
+        email, password: tempPass, updatedAt: new Date().toISOString(), resetBy: 'emergency-reset'
+      });
+    }
+    status.style.color = '#2e7d32';
+    status.innerHTML = `Done. Temporary password for all 3 accounts: <strong>${tempPass}</strong><br>Log in now, then set your own password in Settings → My Account.`;
+  } catch(e) {
+    status.style.color = '#c62828';
+    status.textContent = 'Reset failed: ' + e.message;
   }
 };
 
