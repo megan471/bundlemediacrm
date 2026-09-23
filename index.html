@@ -359,10 +359,14 @@ input,textarea,select{font-family:'Poppins',sans-serif}
         </div>
         <div>
           <div class="field-label">Password</div>
-          <input type="password" id="ag-pass" placeholder="Password" value="bundle2024">
+          <input type="password" id="ag-pass" placeholder="Password">
         </div>
         <div class="auth-error" id="ag-error"></div>
         <button class="btn-primary" onclick="agencyLogin()">Sign In</button>
+        <div style="text-align:center;margin-top:2px">
+          <a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--gray3);text-decoration:underline">Forgot password?</a>
+        </div>
+        <div id="forgot-status" style="display:none;font-size:12px;text-align:center;margin-top:2px"></div>
       </div>
     </div>
   </div>
@@ -1111,7 +1115,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, signOut, updatePassword, fetchSignInMethodsForEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, signOut, updatePassword, fetchSignInMethodsForEmail, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -1328,30 +1332,59 @@ window.agencyLogin = async () => {
   const err = document.getElementById('ag-error');
   err.style.display = 'none';
   try {
-    // Check if there's a Firestore password override first
+    // Check the Firestore password override first — but if it doesn't match,
+    // still fall back to the real Firebase Auth password rather than blocking.
     const passKey = email.replace('@','_').replace('.','_');
-    let useFirestorePass = false;
+    let matched = false;
     try {
       const passDoc = await getDoc(doc(db, 'teamPasswords', passKey));
-      if(passDoc.exists() && passDoc.data().password === pass) {
-        useFirestorePass = true;
-      } else if(passDoc.exists() && passDoc.data().password !== pass) {
-        err.textContent = 'Incorrect email or password.';
-        err.style.display = 'block';
-        return;
-      }
-    } catch(e) { /* no override, try Firebase Auth */ }
+      if(passDoc.exists() && passDoc.data().password === pass) matched = true;
+    } catch(e) { /* no override doc — that's fine */ }
 
-    if(!useFirestorePass) {
-      await signInWithEmailAndPassword(auth, email, pass);
+    if(!matched) {
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        matched = true;
+      } catch(e) { /* real Firebase Auth password didn't match either */ }
     }
+
+    if(!matched) {
+      err.textContent = 'Incorrect email or password.';
+      err.style.display = 'block';
+      return;
+    }
+
     const t = TEAM[email];
-    if(!t) { if(!useFirestorePass) await signOut(auth); err.textContent='Not authorised.'; err.style.display='block'; return; }
+    if(!t) { await signOut(auth).catch(()=>{}); err.textContent='Not authorised.'; err.style.display='block'; return; }
     currentUser = { name: t.name, role: t.role, email };
     startAgencyApp();
   } catch(e) {
     err.textContent = 'Incorrect email or password.';
     err.style.display = 'block';
+  }
+};
+
+window.forgotPassword = async () => {
+  const email = document.getElementById('ag-email').value.trim();
+  const status = document.getElementById('forgot-status');
+  status.style.display = 'block';
+  if(!email) {
+    status.style.color = '#c62828';
+    status.textContent = 'Enter your email above first, then click "Forgot password?"';
+    return;
+  }
+  if(!TEAM[email]) {
+    status.style.color = '#c62828';
+    status.textContent = 'That email isn\'t recognised.';
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    status.style.color = '#2e7d32';
+    status.textContent = `Reset link sent to ${email} — check your inbox.`;
+  } catch(e) {
+    status.style.color = '#c62828';
+    status.textContent = 'Could not send reset email: ' + e.message;
   }
 };
 
