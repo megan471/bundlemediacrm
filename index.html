@@ -2116,16 +2116,28 @@ window.deleteTodo = async () => {
 };
 
 // ── DASHBOARD RETAINER CHECKLIST ──
+// The retainer checklist's "working month" only rolls over on the 11th —
+// content is designed/captioned in one month but only scheduled in the first
+// ~10 days of the next, so the checklist shouldn't flip to the new month on the 1st.
+function getEffectiveChecklistMonth(refDate = new Date()) {
+  const y = refDate.getFullYear();
+  const m = refDate.getMonth(); // 0-indexed
+  const d = refDate.getDate();
+  const target = d <= 10 ? new Date(y, m-1, 1) : new Date(y, m, 1);
+  return `${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,'0')}`;
+}
+
 function populateChecklistMonths() {
   const sel = document.getElementById('checklist-month');
   if(!sel) return;
   const now = new Date();
+  const effectiveMonth = getEffectiveChecklistMonth(now);
   const opts = [];
   for(let i=-2;i<=1;i++){
     const d = new Date(now.getFullYear(), now.getMonth()+i, 1);
     const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     const label = d.toLocaleDateString('en-ZA',{month:'long',year:'numeric'});
-    opts.push(`<option value="${val}"${i===0?' selected':''}>${label}</option>`);
+    opts.push(`<option value="${val}"${val===effectiveMonth?' selected':''}>${label}</option>`);
   }
   sel.innerHTML = opts.join('');
 }
@@ -2318,7 +2330,10 @@ async function populateMonthSelectors() {
       }
     });
   } catch(e) {}
-  const current = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  // Same working-month logic as the retainer checklist: content designed/captioned in one
+  // month is still being scheduled in the first ~10 days of the next, so Briefing shouldn't
+  // jump to the new month on the 1st.
+  const current = getEffectiveChecklistMonth(now);
   const sorted = [...monthSet].sort();
   const options = sorted.map(val=>{
     const [yr,mo] = val.split('-');
