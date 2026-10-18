@@ -203,21 +203,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
 .priority-toggle.active-low{background:#2e7d32;color:#fff;border-color:#2e7d32}
 .cat-select{font-size:11px;padding:3px 8px;border:1.5px solid var(--gray2);border-radius:6px;font-family:'Poppins',sans-serif;color:var(--gray3);background:var(--white);outline:none;cursor:pointer}
 
-/* ── REPORTS ── */
-.reports-list{display:flex;flex-direction:column;gap:12px}
-.report-row{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s}
-.report-row:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
-.report-client{font-size:15px;font-weight:700}
-.report-period{font-size:13px;color:var(--gray3)}
-.report-status{padding:4px 12px;border-radius:50px;font-size:12px;font-weight:700}
-.status-draft{background:var(--gray);color:var(--gray3)}
-.status-published{background:#e8f5e9;color:#2e7d32}
-.platform-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.platform-tab-btn{padding:8px 16px;border-radius:8px;border:2px solid var(--gray2);background:var(--white);font-size:13px;font-weight:600;color:var(--gray3);cursor:pointer;transition:all .2s}
-.platform-tab-btn.active{border-color:var(--pink);color:var(--pink);background:var(--pink-light)}
-.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.metric-card{background:var(--gray);border-radius:10px;padding:16px}
-.metric-label{font-size:11px;font-weight:600;color:var(--gray3);text-transform:uppercase;letter-spacing:.5px}
 .metric-value{font-size:24px;font-weight:800;margin-top:4px;color:var(--text)}
 
 /* ── BRIEFING ── */
@@ -284,7 +269,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .todo-boards{grid-template-columns:1fr}
   .todo-boards-embedded{height:900px}
-  .metrics-grid{grid-template-columns:repeat(2,1fr)}
 }
 .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:var(--white);padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(100px);opacity:0;transition:all .3s}
 .toast.show{transform:translateY(0);opacity:1}
@@ -366,8 +350,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
       <div class="nav-item" onclick="showPage('calendar')"><span class="nav-icon">📅</span> Calendar</div>
       <div class="nav-section">Work</div>
       <div class="nav-item" onclick="showPage('briefing')"><span class="nav-icon">📝</span> Briefing</div>
-      <div class="nav-section">Reporting</div>
-      <div class="nav-item" onclick="showPage('reports')"><span class="nav-icon">📊</span> Reports</div>
       <div class="nav-section" id="settings-nav-section">Admin</div>
       <div class="nav-item" id="casey-hr-nav" onclick="showPage('caseyhr')"><span class="nav-icon">👤</span> Casey — Leave &amp; Notes</div>
       <div class="nav-item" id="settings-nav" onclick="showPage('settings')"><span class="nav-icon">⚙️</span> Settings</div>
@@ -572,26 +554,6 @@ input,textarea,select{font-family:'Poppins',sans-serif}
               <tr><td colspan="5"><div class="loading"><div class="spinner"></div>Loading briefs...</div></td></tr>
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <!-- ── REPORTS ── -->
-      <div class="page" id="page-reports">
-        <div class="page-actions">
-          <div><div class="page-title">Reports</div></div>
-          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-            <select id="report-month" style="padding:8px 14px;border:2px solid var(--gray2);border-radius:8px;font-size:14px;font-weight:600;outline:none" onchange="loadReports()"></select>
-            <button class="btn btn-blue" style="display:flex;align-items:center;gap:6px;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:600" onclick="openMetaSetup()">📊 Connect Meta</button>
-            <button class="add-btn" onclick="openReportModal()">+ New Report</button>
-          </div>
-        </div>
-        <div id="meta-status-bar" style="display:none;background:var(--blue-light);border:2px solid #bbdefb;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;align-items:center;gap:12px;flex-wrap:wrap">
-          <span style="font-weight:700;color:var(--blue)">📊 Meta Connected</span>
-          <span id="meta-connected-pages" style="color:var(--gray3)">Loading pages...</span>
-          <button class="btn btn-blue" style="padding:6px 14px;font-size:12px;margin-left:auto" onclick="pullMetaAnalytics()">Pull This Month's Analytics</button>
-        </div>
-        <div class="reports-list" id="reports-list">
-          <div class="loading"><div class="spinner"></div>Loading reports...</div>
         </div>
       </div>
 
@@ -1012,70 +974,7 @@ input,textarea,select{font-family:'Poppins',sans-serif}
   </div>
 </div>
 
-<!-- Report Modal -->
-<div class="modal-overlay" id="report-modal">
-  <div class="modal" style="max-width:800px">
-    <div class="modal-header">
-      <div class="modal-title" id="report-modal-title">Monthly Report</div>
-      <button class="modal-close" onclick="closeModal('report-modal')">×</button>
-    </div>
-    <div class="modal-body" id="report-modal-body">
-      <div class="form-group"><label>Client *</label>
-        <select id="rpt-client" onchange="updateReportPlatforms()">
-          <option value="">Select client...</option>
-        </select>
-      </div>
-      <div id="rpt-platforms-section" style="display:none">
-        <div class="platform-tabs" id="rpt-platform-tabs"></div>
-        <div id="rpt-metrics-form"></div>
-        <div class="divider"></div>
-        <div class="form-group"><label>📊 Strengths</label><textarea id="rpt-strengths" rows="3"></textarea></div>
-        <div class="form-group"><label>📉 Areas to Improve</label><textarea id="rpt-improve" rows="3"></textarea></div>
-        <div class="form-group"><label>🚀 Next Month Strategy</label><textarea id="rpt-strategy" rows="3"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('report-modal')">Cancel</button>
-      <button class="btn btn-blue" onclick="saveReport('draft')">Save Draft</button>
-      <button class="btn btn-pink" onclick="saveReport('published')">Publish Report</button>
-    </div>
-  </div>
-</div>
 
-<!-- Meta API Setup Modal -->
-<div class="modal-overlay" id="meta-modal">
-  <div class="modal" style="max-width:600px">
-    <div class="modal-header">
-      <div class="modal-title">📊 Connect Meta (Facebook & Instagram)</div>
-      <button class="modal-close" onclick="closeModal('meta-modal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:var(--blue-light);border-radius:10px;padding:16px;margin-bottom:20px;font-size:13px;line-height:1.7">
-        <strong>How to connect:</strong><br>
-        1. Go to <a href="https://developers.facebook.com" target="_blank" style="color:var(--blue)">developers.facebook.com</a> → Create App → Business type<br>
-        2. Add <strong>Facebook Login</strong> and <strong>Instagram Graph API</strong> products<br>
-        3. Generate a <strong>Page Access Token</strong> for each client's Facebook page<br>
-        4. Paste each client's Page ID and Access Token below<br>
-        5. Once connected, click "Pull This Month's Analytics" on the Reports page
-      </div>
-      <div id="meta-client-tokens">
-        <div style="font-weight:700;margin-bottom:12px">Client Page Tokens</div>
-        <div id="meta-token-list" style="display:flex;flex-direction:column;gap:10px">
-          Loading clients...
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="form-group">
-        <label>App ID (from Meta Developer Portal)</label>
-        <input type="text" id="meta-app-id" placeholder="e.g. 1234567890">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('meta-modal')">Close</button>
-      <button class="btn btn-blue" onclick="saveMetaTokens()">Save Tokens</button>
-    </div>
-  </div>
-</div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
@@ -1162,9 +1061,6 @@ let editingEventId = null;
 let editingPostId = null;
 let editingTodoId = null;
 let editingBriefId = null;
-let editingReportId = null;
-let currentReportPlatform = null;
-let currentReportClientPlatforms = [];
 
 // ── TEAM CONFIG ──
 const TEAM = {
@@ -1605,7 +1501,7 @@ window.saveClient = async () => {
 };
 
 function populateClientSelects() {
-  ['todo-client','rpt-client'].forEach(id=>{
+  ['todo-client'].forEach(id=>{
     const sel = document.getElementById(id);
     if(!sel) return;
     const blank = id==='todo-client' ? '<option value="">None</option>' : '<option value="">Select client...</option>';
@@ -2340,7 +2236,7 @@ async function populateMonthSelectors() {
     const label = `${months[parseInt(mo)-1]} ${yr}`;
     return `<option value="${val}"${val===current?' selected':''}>${label}</option>`;
   });
-  ['brief-month','report-month','p-brief-month'].forEach(id=>{
+  ['brief-month','p-brief-month'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.innerHTML=options.join('');
   });
 }
@@ -2666,106 +2562,6 @@ window.saveBrief = async () => {
   loadBriefing();
 };
 
-// ── REPORTS ──
-const METRICS = {
-  Instagram: ['Views','Accounts Reached','Profile Activity','Profile Visits','Post Views','Interactions','New Followers'],
-  Facebook:  ['Reach','Impressions','Engagement','Link Clicks','New Followers','Page Views'],
-  LinkedIn:  ['Impressions','Clicks','Reactions','Comments','Shares','New Followers'],
-  TikTok:    ['Views','Likes','Comments','Shares','New Followers','Profile Views'],
-  YouTube:   ['Views','Watch Time (mins)','Subscribers','Impressions','CTR (%)','Likes'],
-};
-
-async function loadReports() {
-  const month=document.getElementById('report-month').value;
-  const snap=await getDocs(collection(db,'reports'));
-  const reports=snap.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.month===month);
-  const list=document.getElementById('reports-list');
-  list.innerHTML=reports.length ? reports.map(r=>`
-    <div class="report-row" onclick="openReportModal('${r.id}')">
-      <div><div class="report-client">${allClients.find(c=>c.id===r.clientId)?.name||r.clientId}</div><div class="report-period">${r.month}</div></div>
-      <span class="report-status ${r.status==='published'?'status-published':'status-draft'}">${r.status==='published'?'Published':'Draft'}</span>
-    </div>`).join('') : '<div class="empty-state"><div class="empty-icon">📊</div><p>No reports for this month yet.</p></div>';
-}
-
-window.updateReportPlatforms = () => {
-  const cid=document.getElementById('rpt-client').value;
-  const client=allClients.find(c=>c.id===cid);
-  currentReportClientPlatforms=client?.platforms||[];
-  const section=document.getElementById('rpt-platforms-section');
-  const tabs=document.getElementById('rpt-platform-tabs');
-  if(!currentReportClientPlatforms.length){section.style.display='none';return;}
-  section.style.display='block';
-  tabs.innerHTML=currentReportClientPlatforms.map((p,i)=>`<button class="platform-tab-btn${i===0?' active':''}" onclick="switchReportTab('${p}',this)">${p}</button>`).join('');
-  switchReportTab(currentReportClientPlatforms[0]);
-};
-
-window.switchReportTab = (platform, btn=null) => {
-  currentReportPlatform=platform;
-  if(btn){document.querySelectorAll('#rpt-platform-tabs .platform-tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
-  const metrics=METRICS[platform]||[];
-  document.getElementById('rpt-metrics-form').innerHTML=`<div class="metrics-grid">${metrics.map(m=>`
-    <div class="metric-card"><div class="metric-label">${m}</div><input type="number" id="rpt-${platform}-${m.replace(/[^a-zA-Z]/g,'')}" value="0" style="width:100%;border:none;background:transparent;font-size:24px;font-weight:800;color:var(--text);outline:none;margin-top:4px"></div>`).join('')}</div>`;
-};
-
-window.openReportModal = async (id=null) => {
-  editingReportId=id;
-  document.getElementById('report-modal-title').textContent=id?'Edit Report':'New Report';
-  document.getElementById('rpt-client').value='';
-  document.getElementById('rpt-platforms-section').style.display='none';
-  ['rpt-strengths','rpt-improve','rpt-strategy'].forEach(f=>document.getElementById(f).value='');
-  if(id){
-    const snap=await getDoc(doc(db,'reports',id));
-    if(snap.exists()){
-      const r=snap.data();
-      document.getElementById('rpt-client').value=r.clientId||'';
-      updateReportPlatforms();
-      if(r.strengths) document.getElementById('rpt-strengths').value=r.strengths;
-      if(r.improve) document.getElementById('rpt-improve').value=r.improve;
-      if(r.strategy) document.getElementById('rpt-strategy').value=r.strategy;
-      // Restore metrics
-      if(r.metrics){
-        Object.entries(r.metrics).forEach(([platform,vals])=>{
-          switchReportTab(platform);
-          Object.entries(vals).forEach(([k,v])=>{
-            const el=document.getElementById(`rpt-${platform}-${k}`);
-            if(el) el.value=v;
-          });
-        });
-        if(currentReportClientPlatforms[0]) switchReportTab(currentReportClientPlatforms[0]);
-      }
-    }
-  }
-  openModal('report-modal');
-};
-
-window.saveReport = async (status) => {
-  const clientId=document.getElementById('rpt-client').value;
-  if(!clientId){showToast('Please select a client','error');return;}
-  const month=document.getElementById('report-month').value;
-  // Collect metrics
-  const metrics={};
-  currentReportClientPlatforms.forEach(platform=>{
-    const ms=METRICS[platform]||[];
-    metrics[platform]={};
-    ms.forEach(m=>{
-      const key=m.replace(/[^a-zA-Z]/g,'');
-      const el=document.getElementById(`rpt-${platform}-${key}`);
-      if(el) metrics[platform][key]=+el.value||0;
-    });
-  });
-  const data={clientId, month, status, metrics,
-    strengths:document.getElementById('rpt-strengths').value.trim(),
-    improve:document.getElementById('rpt-improve').value.trim(),
-    strategy:document.getElementById('rpt-strategy').value.trim(),
-    updatedAt:new Date().toISOString()
-  };
-  if(editingReportId){await updateDoc(doc(db,'reports',editingReportId),data);showToast('Report updated!');}
-  else{await addDoc(collection(db,'reports'),{...data,createdAt:new Date().toISOString()});showToast('Report saved!');}
-  closeModal('report-modal');
-  loadReports();
-};
-
-
 // ── PAGE NAV ──
 window.showPage = (page) => {
   document.querySelectorAll('.page').forEach(p=>{
@@ -2785,7 +2581,6 @@ window.showPage = (page) => {
   });
   if(page==='dashboard') renderTodoBoards(lastTodosData);
   if(page==='briefing') loadBriefing();
-  if(page==='reports') { loadReports(); checkMetaStatus(); }
   if(page==='settings') { loadGoogleApiSettings(); }
   if(page==='caseyhr') {
     loadCaseyLeave(); loadCaseyMeetingNotes();
@@ -2807,120 +2602,6 @@ window.showToast = (msg,type='success') => {
   t.style.background=type==='error'?'#c62828':'#212121';
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
-};
-
-// ── META API ──
-window.openMetaSetup = async () => {
-  const tokenList = document.getElementById('meta-token-list');
-  // Load saved tokens from Firestore
-  const snap = await getDocs(collection(db,'metaTokens'));
-  const saved = {};
-  snap.docs.forEach(d=>{ saved[d.id]=d.data(); });
-  // Load app ID
-  const appSnap = await getDocs(collection(db,'metaConfig'));
-  if(!appSnap.empty) document.getElementById('meta-app-id').value = appSnap.docs[0].data().appId||'';
-
-  tokenList.innerHTML = allClients
-    .filter(c=>(c.platforms||[]).some(p=>['Facebook','Instagram'].includes(p)))
-    .map(c=>`
-      <div style="background:var(--gray);border-radius:8px;padding:12px">
-        <div style="font-weight:700;font-size:13px;margin-bottom:8px">${c.name}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--gray3);margin-bottom:4px">Facebook Page ID</div>
-            <input type="text" id="meta-pageid-${c.id}" value="${saved[c.id]?.pageId||''}"
-              placeholder="Page ID" style="width:100%;padding:8px;border:2px solid var(--gray2);border-radius:6px;font-size:12px;outline:none">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--gray3);margin-bottom:4px">Access Token</div>
-            <input type="text" id="meta-token-${c.id}" value="${saved[c.id]?.accessToken||''}"
-              placeholder="Page Access Token" style="width:100%;padding:8px;border:2px solid var(--gray2);border-radius:6px;font-size:12px;outline:none">
-          </div>
-        </div>
-      </div>`).join('');
-  openModal('meta-modal');
-};
-
-window.saveMetaTokens = async () => {
-  const appId = document.getElementById('meta-app-id').value.trim();
-  if(appId) await setDoc(doc(db,'metaConfig','main'),{appId});
-  let saved = 0;
-  for(const c of allClients) {
-    const pageId = document.getElementById('meta-pageid-'+c.id)?.value.trim();
-    const token = document.getElementById('meta-token-'+c.id)?.value.trim();
-    if(pageId || token) {
-      await setDoc(doc(db,'metaTokens',c.id),{clientId:c.id, clientName:c.name, pageId, accessToken:token, updatedAt:new Date().toISOString()});
-      saved++;
-    }
-  }
-  showToast(`Saved tokens for ${saved} clients!`);
-  closeModal('meta-modal');
-  checkMetaStatus();
-};
-
-async function checkMetaStatus() {
-  const snap = await getDocs(collection(db,'metaTokens'));
-  const bar = document.getElementById('meta-status-bar');
-  if(!snap.empty) {
-    bar.style.display = 'flex';
-    document.getElementById('meta-connected-pages').textContent = `${snap.size} client pages connected`;
-  }
-}
-
-window.pullMetaAnalytics = async () => {
-  const month = document.getElementById('report-month').value;
-  const [year, mon] = month.split('-').map(Number);
-  const since = Math.floor(new Date(year, mon-1, 1).getTime()/1000);
-  const until = Math.floor(new Date(year, mon, 1).getTime()/1000);
-  const tokenSnap = await getDocs(collection(db,'metaTokens'));
-  if(tokenSnap.empty) { showToast('No Meta tokens saved. Click Connect Meta first.','error'); return; }
-  showToast('Pulling analytics... this may take a moment');
-  let pulled = 0;
-  for(const d of tokenSnap.docs) {
-    const {clientId, clientName, pageId, accessToken} = d.data();
-    if(!pageId || !accessToken) continue;
-    try {
-      // Pull Facebook Page insights
-      const metricsToFetch = 'page_impressions,page_reach,page_engaged_users,page_post_engagements,page_fan_adds_unique';
-      const url = `https://graph.facebook.com/v19.0/${pageId}/insights?metric=${metricsToFetch}&period=month&since=${since}&until=${until}&access_token=${accessToken}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if(data.error) { console.error(clientName, data.error.message); continue; }
-      // Map to our metrics format
-      const fbMetrics = {};
-      (data.data||[]).forEach(m=>{
-        const val = m.values?.[0]?.value||0;
-        const map = {
-          page_impressions:'Impressions', page_reach:'Reach',
-          page_engaged_users:'Engagement', page_post_engagements:'Interactions',
-          page_fan_adds_unique:'New Followers'
-        };
-        if(map[m.name]) fbMetrics[map[m.name]] = val;
-      });
-      // Find or create report for this client + month
-      const reportSnap = await getDocs(query(collection(db,'reports'),
-        where('clientId','==',clientId), where('month','==',month)));
-      const reportData = {
-        clientId, clientName: clientName||'', month,
-        metrics: { Facebook: fbMetrics },
-        status: 'draft',
-        pulledFromMeta: true,
-        pulledAt: new Date().toISOString()
-      };
-      if(reportSnap.empty) {
-        await addDoc(collection(db,'reports'),{...reportData, createdAt:new Date().toISOString()});
-      } else {
-        const existing = reportSnap.docs[0].data();
-        await updateDoc(doc(db,'reports',reportSnap.docs[0].id),{
-          metrics: {...(existing.metrics||{}), Facebook: fbMetrics},
-          pulledFromMeta: true, pulledAt: new Date().toISOString()
-        });
-      }
-      pulled++;
-    } catch(e) { console.error('Meta pull error for', clientName, e); }
-  }
-  showToast(`Analytics pulled for ${pulled} clients! Check Reports.`);
-  loadReports();
 };
 
 // ── GOOGLE API ──
